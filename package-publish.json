@@ -1,0 +1,35 @@
+{
+  "name": "@artinet/router",
+  "version": "0.0.1",
+  "description": "A tool for routing messages to the appropriate agents",
+  "type": "module",
+  "main": "./bundle/router.js",
+  "module": "./bundle/router.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./bundle/router.js",
+      "types": "./dist/types/index.d.ts",
+      "require": "./bundle/router.js",
+      "default": "./bundle/router.js"
+    }
+  },
+  "files": ["bundle", "dist/types", "README.md", "LICENSE"],
+  "keywords": ["artinet", "router", "agent", "a2a", "agent2agent"],
+  "author": "artinet",
+  "license": "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/the-artinet-project/artinet-sdk"
+  },
+  "dependencies": {
+    "@artinet/sdk": "^0.5.7",
+    "@modelcontextprotocol/sdk": "^1.17.5",
+    "p-limit": "^7.1.1",
+    "uuid": "^11.1.0",
+    "zod": "latest"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
