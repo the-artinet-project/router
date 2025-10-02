@@ -1,21 +1,32 @@
 {
   "name": "@artinet/router",
   "version": "0.0.1",
-  "description": "A tool for routing messages to the appropriate agents",
+  "description": "A tool for routing messages between ai agents",
   "type": "module",
-  "main": "./bundle/router.js",
-  "module": "./bundle/router.js",
+  "main": "./dist/router.js",
+  "module": "./dist/router.js",
   "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
-      "import": "./bundle/router.js",
+      "import": "./dist/router.js",
       "types": "./dist/types/index.d.ts",
-      "require": "./bundle/router.js",
-      "default": "./bundle/router.js"
+      "require": "./dist/router.js",
+      "default": "./dist/router.js"
     }
   },
-  "files": ["bundle", "dist/types", "README.md", "LICENSE"],
-  "keywords": ["artinet", "router", "agent", "a2a", "agent2agent"],
+  "files": ["dist", "README.md", "LICENSE", "package.json"],
+  "keywords": [
+    "artinet",
+    "router",
+    "agent",
+    "a2a",
+    "agent2agent",
+    "ai",
+    "agentic",
+    "ai agent",
+    "artificial intelligence",
+    "agentic ai"
+  ],
   "author": "artinet",
   "license": "GPL-3.0",
   "repository": {

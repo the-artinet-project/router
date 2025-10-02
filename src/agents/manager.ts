@@ -1,4 +1,4 @@
-import { IAgentManager } from "~/types/index.js";
+import { IAgentManager } from "../types/index.js";
 import { Agent } from "@artinet/sdk";
 
 export class AgentManager implements IAgentManager {
@@ -26,8 +26,8 @@ export class AgentManager implements IAgentManager {
   }
   async close(): Promise<void> {
     await Promise.all(
-      Array.from(this.agents.values()).map((agent) => {
-        agent.stop();
+      Array.from(this.agents.values()).map(async (agent) => {
+        await agent.stop();
       })
     );
   }

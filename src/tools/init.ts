@@ -19,8 +19,8 @@ import {
 } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { v4 as uuidv4 } from "uuid";
 import { ToolInfo } from "@artinet/types";
-import { logger } from "~/utils/logger.js";
-import { InitializedTool } from "~/types/index.js";
+import { logger } from "../utils/logger.js";
+import { InitializedTool } from "../types/index.js";
 
 export async function initClient(
   implementation: Implementation = {
@@ -47,7 +47,11 @@ export async function createTool(
   params: createToolParams
 ): Promise<InitializedTool> {
   const transport =
-    params.transport || new StdioClientTransport(params.toolServer);
+    params.transport ||
+    new StdioClientTransport({
+      ...params.toolServer,
+      stderr: params.toolServer.stderr ?? "pipe",
+    });
   const client: Client | undefined = await initClient(
     params.implementation || { name: uuidv4(), version: "1.0.0" },
     params.options || {},
@@ -60,6 +64,9 @@ export async function createTool(
       error
     );
     return undefined;
+  });
+  (transport as StdioClientTransport)?.stderr?.on("data", (data) => {
+    logger.warn("stderr: ", data.toString());
   });
   if (!client) {
     throw new Error(
@@ -209,16 +216,19 @@ export async function getToolInfo(client: Client): Promise<ToolInfo> {
   if (serverCapabilities.tools) {
     tools = await getTools(client);
   }
+
   // get all resources
   let resources: Resource[] = [];
   if (serverCapabilities.resources) {
     resources = await getResources(client);
   }
+
   // get all prompts
   let prompts: Prompt[] = [];
   if (serverCapabilities.prompts) {
     prompts = await getPrompts(client);
   }
+
   const instructions: string | undefined = getInstructions(client);
   const toolInfo: ToolInfo = {
     implementation: implementation,

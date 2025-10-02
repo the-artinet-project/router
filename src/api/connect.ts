@@ -3,8 +3,8 @@ import {
   ConnectResponse,
   ConnectResponseSchema,
 } from "@artinet/types";
-import { safeParse } from "~/utils/parse.js";
-import { logger } from "~/utils/logger.js";
+import { safeParse } from "../utils/parse.js";
+import { logger } from "../utils/logger.js";
 
 export async function connectv1(
   props: ConnectRequest
@@ -26,27 +26,29 @@ export async function connectv1(
         }),
       }
     );
-    logger.log("fetchAgentResponse: ", "restResponse: ", restResponse);
+    // logger.log("connectv1: ", "restResponse: ", restResponse);
     if (!restResponse.ok) {
       throw new Error(
-        "Failed to fetch agent response: " + restResponse.statusText
+        "Failed to fetch agent response: " +
+          restResponse.statusText +
+          " " +
+          restResponse.status +
+          " " +
+          (JSON.stringify(await restResponse.json()) ?? "")
       );
     }
 
     const bodyJson = await restResponse.json();
-    logger.log("fetchAgentResponse: ", "bodyJson: ", bodyJson);
+    // logger.log("connectv1: ", "bodyJson: ", bodyJson);
     return safeParse(bodyJson.body, ConnectResponseSchema).data; //todo use TRPC
   } catch (error: any) {
-    logger.error(
-      "fetchAgentResponse: ",
-      "Error fetching agent response:",
-      error
-    );
+    logger.error("connectv1: ", "Error fetching agent response:", error);
     return {
       agentResponse: JSON.stringify(
         [
           {
-            generated_text: error,
+            generated_text:
+              error instanceof Error ? error.message : JSON.stringify(error),
           },
         ],
         null,

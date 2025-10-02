@@ -1,7 +1,7 @@
 {
   "name": "@artinet/router",
   "version": "0.0.1",
-  "description": "A tool for routing messages to the appropriate agents",
+  "description": "an AI agent router for the artinet.",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -38,7 +38,11 @@
     "router",
     "agent",
     "a2a",
-    "agent2agent"
+    "agent2agent",
+    "ai",
+    "agentic",
+    "ai agent",
+    "artificial intelligence"
   ],
   "author": "artinet",
   "license": "GPL-3.0",

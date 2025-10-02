@@ -7,11 +7,11 @@ import {
   AgentResponse,
   SessionMessage,
 } from "@artinet/types";
-import { ToolManager } from "~/tools/index.js";
-import { AgentManager } from "~/agents/index.js";
+import { ToolManager } from "../tools/index.js";
+import { AgentManager } from "../agents/index.js";
 import { AgentCard } from "@artinet/sdk";
-import { connectv1 } from "~/api/connect.js";
-import { safeParseJSON } from "~/utils/parse.js";
+import { connectv1 } from "../api/connect.js";
+import { safeParseJSON } from "../utils/parse.js";
 
 export function parseResponse(response: ConnectResponse): string {
   return (

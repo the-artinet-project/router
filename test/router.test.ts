@@ -80,7 +80,6 @@ describe("Router Tests", () => {
       []
     );
     expect(response).toBeDefined();
-    console.log("response: ", response);
     await router.close();
   }, 30000);
   it("should init with echo agent", async () => {

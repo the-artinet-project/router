@@ -10,14 +10,15 @@ import {
   FactoryParams as CreateAgentParams,
   createAgent,
   logger,
+  AgentCardSchema,
 } from "@artinet/sdk";
 import { ConnectRequest } from "@artinet/types";
-import { IRouter, InitializedTool } from "~/types/index.js";
-import { AgentManager } from "~/agents/index.js";
+import { IRouter, InitializedTool } from "../types/index.js";
+import { AgentManager } from "../agents/index.js";
 import {
   ToolManager,
   createTool as createToolFunction,
-} from "~/tools/index.js";
+} from "../tools/index.js";
 import { SessionManager } from "./session.js";
 import { executeTask } from "./task.js";
 
@@ -54,9 +55,11 @@ export class LocalRouter implements IRouter {
     agents: AgentManager = new AgentManager()
   ): Promise<LocalRouter> {
     const router = new LocalRouter(contexts, tools, agents);
-    servers.mcpServers.stdioServers.forEach(async (server) => {
-      await router.createTool(server);
-    });
+    await Promise.all(
+      servers.mcpServers.stdioServers.map(async (server) => {
+        await router.createTool(server);
+      })
+    );
     return router;
   }
 
@@ -109,6 +112,14 @@ export class LocalRouter implements IRouter {
   }
 
   createAgent(agentParams: Omit<CreateAgentParams, "contexts">): Agent {
+    if (AgentCardSchema.safeParse(agentParams.agentCard).error) {
+      throw new Error(
+        "Invalid agent card: " +
+          (agentParams?.agentCard?.name ?? "name not detected") +
+          " " +
+          JSON.stringify(AgentCardSchema.safeParse(agentParams.agentCard).error)
+      );
+    }
     const agent = createAgent({
       ...agentParams,
       contexts: this.contexts,

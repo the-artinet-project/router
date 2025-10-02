@@ -1,4 +1,5 @@
-import { InitializedTool, IToolManager } from "~/types/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { InitializedTool, IToolManager } from "../types/index.js";
 
 export class ToolManager implements IToolManager {
   private tools: Map<string, InitializedTool> = new Map();
@@ -25,9 +26,13 @@ export class ToolManager implements IToolManager {
   }
   async close(): Promise<void> {
     await Promise.all(
-      Array.from(this.tools.values()).map((tool) => {
-        tool.client.close();
-        tool.transport.close();
+      Array.from(this.tools.values()).map(async (tool) => {
+        await tool.client.close();
+        const pid = (tool.transport as StdioClientTransport).pid;
+        if (pid) {
+          process.kill(pid);
+        }
+        await tool.transport.close();
       })
     );
   }
