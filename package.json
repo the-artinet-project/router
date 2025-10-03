@@ -1,7 +1,7 @@
 {
   "name": "@artinet/router",
   "version": "0.0.1",
-  "description": "an AI agent router for the artinet.",
+  "description": "A tool for routing messages between ai agents.",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -17,11 +17,11 @@
   },
   "files": [
     "dist",
+    "package.json",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "prepare": "ts-patch install -s",
     "build": "tsc",
     "build:obfuscated": "./scripts/obfuscate.sh",
     "build:bundle": "npm run build && esbuild src/index.ts --bundle --platform=node --format=esm --minify=true --outfile=bundle/router-base.js --external:@artinet/sdk --external:@modelcontextprotocol/*",
@@ -45,18 +45,18 @@
     "artificial intelligence"
   ],
   "author": "artinet",
-  "license": "GPL-3.0",
+  "license": "GPL-3.0-only",
   "repository": {
     "type": "git",
     "url": "https://github.com/the-artinet-project/artinet-sdk"
   },
   "dependencies": {
     "@artinet/sdk": "^0.5.7",
-    "@artinet/types": "git+https://github.com/the-artinet-project/types.git#main",
-    "@modelcontextprotocol/sdk": "^1.17.5",
+    "@artinet/types": "0.0.2",
+    "@modelcontextprotocol/sdk": "^1.19.1",
     "p-limit": "^7.1.1",
     "uuid": "^11.1.0",
-    "zod": "latest"
+    "zod": "^4.1.11"
   },
   "devDependencies": {
     "@modelcontextprotocol/server-everything": "^2025.8.18",
@@ -70,10 +70,8 @@
     "rimraf": "^5.0.5",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
-    "ts-patch": "^3.3.0",
-    "typescript": "^5.2.2",
-    "typescript-eslint": "^8.31.0",
-    "typescript-transform-paths": "^3.5.5"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.31.0"
   },
   "engines": {
     "node": ">=18.0.0"

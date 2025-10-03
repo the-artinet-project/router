@@ -22,9 +22,9 @@ cp -r ./LICENSE ./publish-temp/LICENSE
 cp -r ./package-publish.json ./publish-temp/package.json
 # Use the stripped-down package.json for publishing
 cd ./publish-temp
-npm pack #npm publish --access public #publish #--pack-destination ./publish-temp --package-lock-only=false
+npm publish --access public #publish #--pack-destination ./publish-temp --package-lock-only=false
 
 # Clean up if needed
-# rm -rf ./publish-temp
+rm -rf ./publish-temp
 
 echo "Publishing completed!"

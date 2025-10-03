@@ -1,3 +1,7 @@
+/**
+ * Copyright 2025 The Artinet Project
+ * SPDX-License-Identifier: GPL-3.0-only
+ */
 import { v4 as uuidv4 } from "uuid";
 import { StdioServerParameters } from "@modelcontextprotocol/sdk/client/stdio.js";
 import {

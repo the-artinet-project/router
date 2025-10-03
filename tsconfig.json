@@ -1,8 +1,4 @@
 {
-  "ts-node": {
-    "transpileOnly": true,
-    "require": ["typescript-transform-paths/register"]
-  },
   "compilerOptions": {
     "target": "ES2022",
     "module": "NodeNext",
@@ -31,12 +27,6 @@
       "~/*": ["src/*"]
     }
   },
-  "plugins": [
-    {
-      "transform": "typescript-transform-paths"
-    },
-    { "transform": "typescript-transform-paths", "afterDeclarations": true }
-  ],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

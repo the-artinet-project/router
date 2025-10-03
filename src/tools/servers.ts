@@ -1,3 +1,7 @@
+/**
+ * Copyright 2025 The Artinet Project
+ * SPDX-License-Identifier: GPL-3.0-only
+ */
 import { LocalServerConfig, RemoteServerConfig, Config } from "@artinet/types";
 
 export function sortServersWithName(config: Config): {

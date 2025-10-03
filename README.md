@@ -1,14 +1,13 @@
 # @artinet/router
 
-A TypeScript library for routing messages to AI agents and managing tool interactions.
+A tool for routing messages between A2A enabled AI agents and marshalling MCP tool servers.
 
 ## Features
 
 - **Agent Management**: Route messages between multiple AI agents
 - **Tool Integration**: MCP tool integration with concurrent execution
 - **Session Management**: Persistent sessions with message history
-- **Type Safety**: Full TypeScript support
-- **Coming Soon**: Creating your own custom router using the IRouter interface
+- **Coming Soon**: A guide to create your own custom router using the IRouter interface
 
 ## Installation
 
@@ -27,7 +26,7 @@ const router = new LocalRouter();
 
 const result = await router.connect(
   {
-    identifier: "session-id",
+    identifier: "deepseek-ai/DeepSeek-R1",
     session: { messages: [{ role: "user", content: "Hello!" }] },
     preferredEndpoint: "hf-inference",
     options: { isAuthRequired: false },
@@ -37,14 +36,55 @@ const result = await router.connect(
 );
 ```
 
-### Full Router with Tools and Agents
+### Router with Agents
 
 ```typescript
-import { LocalRouter, FileStore } from "@artinet/router";
-import { Agent } from "@artinet/sdk";
+import { LocalRouter } from "@artinet/router";
+import { AgentBuilder, Context, FileStore, getPayload } from "@artinet/sdk";
 
-// Create a router with MCP tools
-const router: LocalRouter = await LocalRouter.createRouter({
+const router = new LocalRouter();
+
+// Create an agent and define its behavior
+router.createAgent({
+  engine: AgentBuilder()
+    .text(({ command }) => {
+      return getPayload(command).text;
+    })
+    .createAgentEngine(),
+  agentCard: {
+    name: "EchoAgent",
+    description: "Echos back the users request",
+  },
+  tasks: new FileStore("my_dir"), //save sessions to disk
+});
+
+// Call the agent via a prompt
+const result: string = await router.connect(
+  {
+    identifier: "deepseek-ai/DeepSeek-R1", //find a valid model identifier @ artinet.io
+    session: {
+      messages: [{ role: "user", content: "Use the echo agent to reply to me" }],
+    },
+    preferredEndpoint: "hf-inference",
+    options: { isAuthRequired: false },
+  },
+  [],
+  ["EchoAgent"], // provide a list of allowed agents
+  (update) => console.log("Response:", update), //a callback function to recieve updates from the router
+  taskId: "task123" //pass a taskId to resume a saved session
+);
+
+await router.close();
+```
+
+### Router as Agent
+
+```typescript
+import { LocalRouter } from "@artinet/router";
+import { Agent, Context, FileStore } from "@artinet/sdk";
+
+// Create a router with tools
+const router = await LocalRouter.createRouter({
   mcpServers: {
     stdioServers: [
       {
@@ -56,57 +96,74 @@ const router: LocalRouter = await LocalRouter.createRouter({
         ],
       },
       {
-        command: "python",
-        args: ["-m", "mcp_server_git", "/path/to/git/repo"],
+        command: "uvx",
+        args: ["mcp-server-fetch"],
       },
     ],
   },
 });
 
-// Create agents
-const codeAgent: Agent = router.createAgent({
+router.createAgent({
+  engine: AgentBuilder()
+    .text(({ command }) => {
+      return await router.connect(
+        {
+          identifier: "deepseek-ai/DeepSeek-R1",
+          session: {
+            messages: [
+              { role: "system", content: "If the caller wants to create any files, only make them in /path/to/allowed/files/current" }
+              { role: "user", content: getPayload(command).text }
+          ]},
+          preferredEndpoint: "hf-inference",
+          options: { isAuthRequired: false },
+        },
+        ["secure-filesystem-server"], //a list of allowed tools
+        [],
+        (update) => console.log("File Manager:", update)
+      );
+    })
+    .createAgentEngine(),
   agentCard: {
-    name: "CodeAgent",
-    description: "Helps with code analysis",
+    name: "File Manager",
+    description: "An agent that can manage the file system",
   },
-  tasks: new FileStore("my_dir"), //save sessions to disk
+  tasks: new FileStore("my_dir"),
 });
 
-// Execute with tools and agents
 const result: string = await router.connect(
   {
     identifier: "deepseek-ai/DeepSeek-R1",
     session: {
-      messages: [{ role: "user", content: "Analyze this repository" }],
+      messages: [
+        {
+          role: "user",
+          content:
+            "Check the status of xyz.com and write that update to a text file in /path/to/allowed/files",
+        },
+      ],
     },
     preferredEndpoint: "hf-inference",
     options: { isAuthRequired: false },
   },
-  ["filesystem", "git"], // tool IDs
-  ["CodeAgent"], // agent IDs
-  (response) => console.log("Response:", response),
-  taskId: "task123" //pass session identifiers to resume
+  ["mcp-fetch"],
+  ["File Manager"]
 );
 
 await router.close();
 ```
 
-## API
+\*Currently only supports stdio MCP Servers.
 
-### LocalRouter
+### Core Commands
 
 - `connect(params, tools[], agents[], callback?)` - Execute task with routing
 - `createAgent(params)` - Create new agent instance
 - `createTool(server)` - Create tool from MCP server
 - `close()` - Close all connections
 
-## Development
+### About
 
-```bash
-npm install
-npm run build
-npm test
-```
+This library leverages api.artinet.io to route commands to local agents & tools.
 
 ## License
 

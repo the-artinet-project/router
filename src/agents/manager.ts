@@ -1,3 +1,7 @@
+/**
+ * Copyright 2025 The Artinet Project
+ * SPDX-License-Identifier: GPL-3.0-only
+ */
 import { IAgentManager } from "../types/index.js";
 import { Agent } from "@artinet/sdk";
 
