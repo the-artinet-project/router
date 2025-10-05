@@ -2,6 +2,10 @@
 
 A tool for routing messages between A2A enabled AI agents and marshalling MCP tool servers.
 
+
+https://github.com/user-attachments/assets/b952b0f7-550a-44a3-b882-2bb3345be0b1
+
+
 ## Features
 
 - **Agent Management**: Route messages between multiple AI agents
