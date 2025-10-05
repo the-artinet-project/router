@@ -7,7 +7,7 @@ publish-temp
 package-lock.json
 output.txt
 artinet-router-*.tgz
-scripts/*.sh
+scripts
 test/demo.ts
 test/bundle.test.ts
 artinet.log
