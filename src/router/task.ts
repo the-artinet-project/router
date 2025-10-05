@@ -89,7 +89,8 @@ export async function callAgents(
   iterations: number,
   callbackFunction: (
     response: AgentResponse | ToolResponse
-  ) => void = console.log
+  ) => void = console.log,
+  respondOnFinalOnly: boolean = false
 ): Promise<AgentResponse[]> {
   if (agentRequests.length === 0) {
     return [];
@@ -185,9 +186,11 @@ export async function callAgents(
                 const callAgentResponse: AgentResponse = {
                   kind: "agent_response",
                   uri: agentRequest.uri,
-                  directive: (agentCallResponse as TaskStatusUpdateEvent)?.final
-                    ? agentRequest.directive
-                    : "",
+                  directive:
+                    (agentCallResponse as TaskStatusUpdateEvent)?.final ||
+                    !respondOnFinalOnly
+                      ? agentRequest.directive
+                      : "",
                   result: content,
                 };
                 finalResponse = callAgentResponse;
@@ -232,10 +235,9 @@ export async function executeTask(
   toolManager: ToolManager,
   agentManager: AgentManager,
   taskId: string = uuidv4(),
-  callbackFunction: (
-    response: string | ToolResponse | AgentResponse
-  ) => void = console.log,
-  abortController: AbortController = new AbortController()
+  callbackFunction: (...args: any[]) => void = console.log,
+  abortController: AbortController = new AbortController(),
+  respondOnFinalOnly?: boolean
 ): Promise<string> {
   if (!sessionManager.Initialized) {
     throw new Error("Session is not initialized");
@@ -287,7 +289,8 @@ In the final response, the assistant will also provide the user with suggestions
       response.options?.agents?.requests ?? [],
       taskId,
       iterations,
-      callbackFunction
+      callbackFunction,
+      respondOnFinalOnly
     ).catch((error) => {
       logger.error(
         "error calling agents[task:" + taskId + "][" + iterations + "]: ",

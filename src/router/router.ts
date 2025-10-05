@@ -38,6 +38,7 @@ export const defaultConnectRequest: ConnectRequest = {
 };
 
 export class LocalRouter implements IRouter {
+  private respondOnFinalOnly: boolean;
   private agentManager: AgentManager;
   private toolManager: ToolManager;
   private contextManager: ContextManagerInterface<Command, State, Update>;
@@ -48,8 +49,10 @@ export class LocalRouter implements IRouter {
       Update
     > = new ContextManager(),
     tools: ToolManager = new ToolManager(),
-    agents: AgentManager = new AgentManager()
+    agents: AgentManager = new AgentManager(),
+    respondOnFinalOnly: boolean = false
   ) {
+    this.respondOnFinalOnly = respondOnFinalOnly;
     this.contextManager = contexts;
     this.toolManager = tools;
     this.agentManager = agents;
@@ -67,9 +70,10 @@ export class LocalRouter implements IRouter {
       Update
     > = new ContextManager(),
     tools: ToolManager = new ToolManager(),
-    agents: AgentManager = new AgentManager()
+    agents: AgentManager = new AgentManager(),
+    respondOnFinalOnly: boolean = false
   ): Promise<LocalRouter> {
-    const router = new LocalRouter(contexts, tools, agents);
+    const router = new LocalRouter(contexts, tools, agents, respondOnFinalOnly);
     await Promise.all(
       servers.mcpServers.stdioServers.map(async (server) => {
         await router.createTool(server).catch((error) => {
@@ -129,7 +133,8 @@ export class LocalRouter implements IRouter {
       this.agentManager,
       taskId,
       callbackFunction,
-      abortController
+      abortController,
+      this.respondOnFinalOnly
     ).catch((error) => {
       logger.error("error executing task[task:" + taskId + "]: ", error);
       throw error;
