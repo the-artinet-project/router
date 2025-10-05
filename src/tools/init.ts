@@ -25,6 +25,7 @@ import { v4 as uuidv4 } from "uuid";
 import { ToolInfo } from "@artinet/types";
 import { logger } from "../utils/logger.js";
 import { InitializedTool } from "../types/index.js";
+import { envArgsCapture } from "../utils/env-expand.js";
 
 export async function initClient(
   implementation: Implementation = {
@@ -36,7 +37,9 @@ export async function initClient(
   transport: Transport
 ): Promise<Client> {
   const client = new Client(implementation, options);
-  await client.connect(transport);
+  await client.connect(transport).catch((error) => {
+    logger.error("initClient: error connecting to client: ", error);
+  });
   return client;
 }
 
@@ -54,6 +57,7 @@ export async function createTool(
     params.transport ||
     new StdioClientTransport({
       ...params.toolServer,
+      args: envArgsCapture(params.toolServer.args ?? []),
       stderr: params.toolServer.stderr ?? "pipe",
     });
   const client: Client | undefined = await initClient(

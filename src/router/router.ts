@@ -72,7 +72,9 @@ export class LocalRouter implements IRouter {
     const router = new LocalRouter(contexts, tools, agents);
     await Promise.all(
       servers.mcpServers.stdioServers.map(async (server) => {
-        await router.createTool(server);
+        await router.createTool(server).catch((error) => {
+          logger.error("error creating tool: ", error);
+        });
       })
     );
     return router;

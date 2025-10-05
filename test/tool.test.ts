@@ -13,12 +13,21 @@ import {
   createToolParams,
   InitializedTool,
 } from "../src/index.js";
+import { envArgsCapture } from "../src/utils/env-expand.js";
 jest.setTimeout(10000);
 
 const config: Config = {
   "server-everything": {
     command: "npx",
     args: ["-y", "@modelcontextprotocol/server-everything"],
+  },
+  "server-filesystem": {
+    command: "npx",
+    args: [
+      "-y",
+      "@modelcontextprotocol/server-filesystem",
+      "${XDG_DATA_HOME:-$HOME/.local/share}/",
+    ],
   },
 };
 
@@ -80,6 +89,20 @@ describe("Tool Tests", () => {
     expect(tool.info).toBeDefined();
     expect(tool.info.tools).toBeDefined();
     expect(tool.info.tools?.length).toBe(10);
+    expect(tool.client).toBeDefined();
+    expect(tool.transport).toBeDefined();
+    tool.client.close();
+    tool.transport.close();
+  });
+
+  it("should expand env vars", async () => {
+    const tool: InitializedTool = await createTool({
+      toolServer: config["server-filesystem"] as StdioServerParameters,
+    });
+    expect(tool).toBeDefined();
+    expect(tool.info).toBeDefined();
+    expect(tool.info.tools).toBeDefined();
+    expect(tool.info.tools?.length).toBe(14);
     expect(tool.client).toBeDefined();
     expect(tool.transport).toBeDefined();
     tool.client.close();
