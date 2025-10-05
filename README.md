@@ -144,4 +144,4 @@ This library leverages api.artinet.io to route commands to local agents & tools.
 
 ## License
 
-GPL-3.0 - see [LICENSE](LICENSE)
+Apache-2.0 - see [LICENSE](LICENSE)
