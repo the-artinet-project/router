@@ -1,8 +1,7 @@
 /**
  * Copyright 2025 The Artinet Project
- * SPDX-License-Identifier: GPL-3.0-only
+ * SPDX-License-Identifier: Apache-2.0
  */
-import { v4 as uuidv4 } from "uuid";
 import { StdioServerParameters } from "@modelcontextprotocol/sdk/client/stdio.js";
 import {
   Agent,
@@ -17,7 +16,12 @@ import {
   AgentCardSchema,
 } from "@artinet/sdk";
 import { ConnectRequest } from "@artinet/types";
-import { IRouter, InitializedTool } from "../types/index.js";
+import {
+  IRouter,
+  InitializedTool,
+  RouterParams,
+  RouterRequest,
+} from "../types/index.js";
 import { AgentManager } from "../agents/index.js";
 import {
   ToolManager,
@@ -25,6 +29,13 @@ import {
 } from "../tools/index.js";
 import { SessionManager } from "./session.js";
 import { executeTask } from "./task.js";
+
+export const defaultConnectRequest: ConnectRequest = {
+  identifier: "deepseek-ai/DeepSeek-R1",
+  session: { messages: [] },
+  preferredEndpoint: "hf-inference",
+  options: { isAuthRequired: false },
+};
 
 export class LocalRouter implements IRouter {
   private agentManager: AgentManager;
@@ -77,19 +88,32 @@ export class LocalRouter implements IRouter {
     return this.contextManager;
   }
 
-  async connect(
-    params: Omit<ConnectRequest, "options"> & {
-      options: Omit<ConnectRequest["options"], "tools" | "agents">;
-    },
-    tools: string[],
-    agents: string[],
-    callbackFunction: (...args: any[]) => void = console.log,
-    taskId: string = uuidv4(),
-    abortController: AbortController = new AbortController()
-  ): Promise<string> {
-    const sessionManager = new SessionManager(params);
+  async connect(params: RouterParams): Promise<string> {
+    const {
+      message,
+      tools,
+      agents,
+      callbackFunction,
+      taskId,
+      abortController,
+    } = params;
+    let routerRequest: RouterRequest;
+    if (typeof message === "string") {
+      routerRequest = {
+        ...defaultConnectRequest,
+        session: { messages: [{ role: "user", content: message }] },
+      };
+    } else {
+      routerRequest = message;
+    }
+    const sessionManager = new SessionManager(routerRequest);
     await sessionManager
-      .initSession(tools, agents, this.toolManager, this.agentManager)
+      .initSession(
+        tools ?? [],
+        agents ?? [],
+        this.toolManager,
+        this.agentManager
+      )
       .catch((error) => {
         logger.error(
           "error initializing session[task:" + taskId + "]: ",

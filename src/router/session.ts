@@ -1,6 +1,6 @@
 /**
  * Copyright 2025 The Artinet Project
- * SPDX-License-Identifier: GPL-3.0-only
+ * SPDX-License-Identifier: Apache-2.0
  */
 import {
   ConnectRequest,
@@ -10,13 +10,14 @@ import {
   ToolResponse,
   AgentResponse,
   SessionMessage,
+  ConnectOptions,
 } from "@artinet/types";
 import { ToolManager } from "../tools/index.js";
 import { AgentManager } from "../agents/index.js";
 import { AgentCard } from "@artinet/sdk";
 import { connectv1 } from "../api/connect.js";
 import { safeParseJSON } from "../utils/parse.js";
-
+import { RouterRequest } from "../types/index.js";
 export function parseResponse(response: ConnectResponse): string {
   return (
     safeParseJSON(response.agentResponse)?.data?.[0]?.generated_text ??
@@ -39,11 +40,7 @@ export class SessionManager {
   private connectRequest: ConnectRequest;
   private responseText: string = "";
   private initialized: boolean = false;
-  constructor(
-    connectRequest: Omit<ConnectRequest, "options"> & {
-      options: Omit<ConnectRequest["options"], "tools" | "agents">;
-    }
-  ) {
+  constructor(connectRequest: RouterRequest) {
     this.connectRequest = connectRequest;
   }
   get ConnectRequest(): ConnectRequest {
@@ -76,14 +73,14 @@ export class SessionManager {
       )
     ).filter((agent): agent is AgentCard => agent !== undefined);
 
-    const connectOptions: ConnectRequest["options"] = {
+    const connectOptions: ConnectOptions = {
       ...this.connectRequest.options,
       tools: {
-        ...this.connectRequest.options.tools,
+        ...this.connectRequest.options?.tools,
         localServers: localTools,
       },
       agents: {
-        ...this.connectRequest.options.agents,
+        ...this.connectRequest.options?.agents,
         localServers: localAgents,
       },
     };
@@ -113,10 +110,10 @@ export class SessionManager {
     }
 
     if (toolResults) {
-      const connectOptions: ConnectRequest["options"] = {
+      const connectOptions: ConnectOptions = {
         ...this.connectRequest.options,
         tools: {
-          ...(this.connectRequest.options.tools ?? {}),
+          ...(this.connectRequest.options?.tools ?? {}),
           results: toolResults,
         },
       };
@@ -124,10 +121,10 @@ export class SessionManager {
     }
 
     if (agentResults) {
-      const connectOptions: ConnectRequest["options"] = {
+      const connectOptions: ConnectOptions = {
         ...this.connectRequest.options,
         agents: {
-          ...(this.connectRequest.options.agents ?? {}),
+          ...(this.connectRequest.options?.agents ?? {}),
           responses: agentResults,
         },
       };

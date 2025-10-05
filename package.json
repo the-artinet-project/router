@@ -1,7 +1,32 @@
 {
+  "version": "0.0.4",
   "name": "@artinet/router",
-  "version": "0.0.1",
-  "description": "A tool for routing messages between ai agents.",
+  "description": "A tool for routing messages between A2A enabled AI agents that can call MCP servers.",
+  "author": "artinet",
+  "homepage": "https://artinet.io",
+  "license": "Apache-2.0",
+  "keywords": [
+    "artinet",
+    "router",
+    "agent",
+    "a2a",
+    "agent2agent",
+    "ai",
+    "agentic",
+    "ai agent",
+    "artificial intelligence",
+    "agentic ai"
+  ],
+  "files": [
+    "dist",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/the-artinet-project/router"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -15,15 +40,8 @@
       "default": "./dist/index.js"
     }
   },
-  "files": [
-    "dist",
-    "package.json",
-    "README.md",
-    "LICENSE"
-  ],
   "scripts": {
     "build": "tsc",
-    "build:obfuscated": "./scripts/obfuscate.sh",
     "build:bundle": "npm run build && esbuild src/index.ts --bundle --platform=node --format=esm --minify=true --outfile=bundle/router-base.js --external:@artinet/sdk --external:@modelcontextprotocol/*",
     "clean": "rimraf dist",
     "dev": "tsc --watch",
@@ -33,30 +51,13 @@
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
   },
-  "keywords": [
-    "artinet",
-    "router",
-    "agent",
-    "a2a",
-    "agent2agent",
-    "ai",
-    "agentic",
-    "ai agent",
-    "artificial intelligence"
-  ],
-  "author": "artinet",
-  "license": "GPL-3.0-only",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/the-artinet-project/artinet-sdk"
-  },
   "dependencies": {
     "@artinet/sdk": "^0.5.7",
-    "@artinet/types": "0.0.2",
+    "@artinet/types": "0.0.4",
     "@modelcontextprotocol/sdk": "^1.19.1",
     "p-limit": "^7.1.1",
     "uuid": "^11.1.0",
-    "zod": "^4.1.11"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@modelcontextprotocol/server-everything": "^2025.8.18",

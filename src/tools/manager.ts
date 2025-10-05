@@ -1,6 +1,6 @@
 /**
  * Copyright 2025 The Artinet Project
- * SPDX-License-Identifier: GPL-3.0-only
+ * SPDX-License-Identifier: Apache-2.0
  */
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { InitializedTool, IToolManager } from "../types/index.js";

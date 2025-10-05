@@ -4,7 +4,6 @@ import {
   StdioServerParameters,
 } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { ServerCapabilities } from "@modelcontextprotocol/sdk/types.js";
 import { Config, ToolInfo } from "@artinet/types";
 import {
   getToolInfo,

@@ -1,0 +1,15 @@
+# .gitignore
+bundle
+dist
+node_modules
+publish-temp
+.env
+package-lock.json
+output.txt
+artinet-router-*.tgz
+scripts/*.sh
+test/demo.ts
+test/bundle.test.ts
+artinet.log
+package-publish.json
+.vscode

@@ -6,6 +6,7 @@ import {
   ToolManager,
   initClient,
   getToolInfo,
+  InitializedTool,
 } from "../src/index.js";
 import { Client } from "@modelcontextprotocol/sdk/client";
 import {
@@ -13,6 +14,7 @@ import {
   StdioServerParameters,
 } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { parseResponse } from "../src/router/session.js";
+import { Implementation } from "@modelcontextprotocol/sdk/types.js";
 jest.setTimeout(10000);
 describe("Session Tests", () => {
   let request: ConnectRequest = {
@@ -49,30 +51,41 @@ describe("Session Tests", () => {
   });
   it("should init session", async () => {
     const sessionManager = new SessionManager(request);
+    const impl: Implementation = {
+      name: "test-tool",
+      version: "1.0.0",
+      title: "test-tool",
+    };
+    const toolMap: Map<string, InitializedTool> = new Map([
+      [
+        "test-tool",
+        {
+          client: new Client({
+            name: "test-tool",
+            version: "1.0.0",
+            title: "test-tool",
+          }),
+          transport: new StdioClientTransport({
+            command: "npx",
+            args: ["-y", "@modelcontextprotocol/server-everything"],
+          }),
+          info: {
+            implementation: impl,
+            prompts: [],
+            resources: [],
+            tools: [],
+            serverCapabilities: {
+              tools: { listChanged: false },
+            },
+            instructions: "",
+          },
+        },
+      ],
+    ]);
     const newRequest = await sessionManager.initSession(
       ["test-tool"],
       ["test-agent"],
-      new ToolManager(
-        new Map([
-          [
-            "test-tool",
-            {
-              client: new Client({
-                name: "test-tool",
-                version: "1.0.0",
-                title: "test-tool",
-              }),
-              transport: new StdioClientTransport({
-                command: "npx",
-                args: ["-y", "@modelcontextprotocol/server-everything"],
-              }),
-              info: {
-                implementation: { name: "test-tool", version: "1.0.0" },
-              },
-            },
-          ],
-        ])
-      ),
+      new ToolManager(toolMap),
       new AgentManager()
     );
     expect(newRequest).toBeDefined();

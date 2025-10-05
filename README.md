@@ -24,16 +24,9 @@ import { LocalRouter } from "@artinet/router";
 
 const router = new LocalRouter();
 
-const result = await router.connect(
-  {
-    identifier: "deepseek-ai/DeepSeek-R1",
-    session: { messages: [{ role: "user", content: "Hello!" }] },
-    preferredEndpoint: "hf-inference",
-    options: { isAuthRequired: false },
-  },
-  [],
-  []
-);
+const result = await router.connect({
+  message: "Hello World!",
+});
 ```
 
 ### Router with Agents
@@ -55,24 +48,25 @@ router.createAgent({
     name: "EchoAgent",
     description: "Echos back the users request",
   },
-  tasks: new FileStore("my_dir"), //save sessions to disk
+  tasks: new FileStore("my_dir"), // Save sessions to disk
 });
 
 // Call the agent via a prompt
-const result: string = await router.connect(
-  {
-    identifier: "deepseek-ai/DeepSeek-R1", //find a valid model identifier @ artinet.io
+const result: string = await router.connect({
+  message: {
+    identifier: "deepseek-ai/DeepSeek-R1", // Find a valid model identifier @ artinet.io; Defaults to DeepSeek-R1
     session: {
-      messages: [{ role: "user", content: "Use the echo agent to reply to me" }],
+      messages: [
+        { role: "user", content: "Use the echo agent to reply to me" },
+      ],
     },
     preferredEndpoint: "hf-inference",
     options: { isAuthRequired: false },
   },
-  [],
-  ["EchoAgent"], // provide a list of allowed agents
-  (update) => console.log("Response:", update), //a callback function to recieve updates from the router
-  taskId: "task123" //pass a taskId to resume a saved session
-);
+  agents: ["EchoAgent"], // Provide a list of allowed agents
+  callbackFunction: (update) => console.log("Response:", update), // A callback function to recieve updates from the router
+  taskId: "task123", // Pass a taskId to resume a saved agent session
+});
 
 await router.close();
 ```
@@ -81,7 +75,7 @@ await router.close();
 
 ```typescript
 import { LocalRouter } from "@artinet/router";
-import { Agent, Context, FileStore } from "@artinet/sdk";
+import { AgentBuilder, FileStore } from "@artinet/sdk";
 
 // Create a router with tools
 const router = await LocalRouter.createRouter({
@@ -105,9 +99,8 @@ const router = await LocalRouter.createRouter({
 
 router.createAgent({
   engine: AgentBuilder()
-    .text(({ command }) => {
-      return await router.connect(
-        {
+    .text(({ command }) => await router.connect({
+        message: {
           identifier: "deepseek-ai/DeepSeek-R1",
           session: {
             messages: [
@@ -117,12 +110,9 @@ router.createAgent({
           preferredEndpoint: "hf-inference",
           options: { isAuthRequired: false },
         },
-        ["secure-filesystem-server"], //a list of allowed tools
-        [],
-        (update) => console.log("File Manager:", update)
-      );
-    })
-    .createAgentEngine(),
+        tools: ["secure-filesystem-server"], //a list of allowed tools
+        callbackFunction: (update) => console.log("File Manager:", update)
+    })).createAgentEngine(),
   agentCard: {
     name: "File Manager",
     description: "An agent that can manage the file system",
@@ -130,24 +120,11 @@ router.createAgent({
   tasks: new FileStore("my_dir"),
 });
 
-const result: string = await router.connect(
-  {
-    identifier: "deepseek-ai/DeepSeek-R1",
-    session: {
-      messages: [
-        {
-          role: "user",
-          content:
-            "Check the status of xyz.com and write that update to a text file in /path/to/allowed/files",
-        },
-      ],
-    },
-    preferredEndpoint: "hf-inference",
-    options: { isAuthRequired: false },
-  },
-  ["mcp-fetch"],
-  ["File Manager"]
-);
+const result: string = await router.connect({
+  message: "Check the status of xyz.com and write that update to a text file in /path/to/allowed/files",
+  tools: ["mcp-fetch"],
+  agents: ["File Manager"]
+});
 
 await router.close();
 ```
