@@ -33,7 +33,7 @@ const result = await router.connect({
 
 ```typescript
 import { LocalRouter } from "@artinet/router";
-import { AgentBuilder, Context, FileStore, getPayload } from "@artinet/sdk";
+import { AgentBuilder, FileStore, getPayload } from "@artinet/sdk";
 
 const router = new LocalRouter();
 
@@ -41,14 +41,15 @@ const router = new LocalRouter();
 router.createAgent({
   engine: AgentBuilder()
     .text(({ command }) => {
-      return getPayload(command).text;
+      return getPayload(command.message).text;
     })
     .createAgentEngine(),
   agentCard: {
     name: "EchoAgent",
-    description: "Echos back the users request",
+    description: "Echos back every request exactly",
+    ...
   },
-  tasks: new FileStore("my_dir"), // Save sessions to disk
+  tasks: new FileStore("my_dir"), // Save sessions to disk (must be a valid directory)
 });
 
 // Call the agent via a prompt
@@ -117,7 +118,7 @@ router.createAgent({
     name: "File Manager",
     description: "An agent that can manage the file system",
   },
-  tasks: new FileStore("my_dir"),
+  tasks: new FileStore("my_dir"), //should be a valid directory
 });
 
 const result: string = await router.connect({
