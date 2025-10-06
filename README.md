@@ -48,7 +48,7 @@ router.createAgent({
       return getPayload(command.message).text;
     })
     .createAgentEngine(),
-  agentCard: {
+  agentCard: { //must be a valid agent card
     name: "EchoAgent",
     description: "Echos back every request exactly",
     ...
@@ -121,8 +121,9 @@ router.createAgent({
   agentCard: {
     name: "File Manager",
     description: "An agent that can manage the file system",
+    ...
   },
-  tasks: new FileStore("my_dir"), //should be a valid directory
+  tasks: new FileStore("my_dir"), //must be a valid directory
 });
 
 const result: string = await router.connect({
