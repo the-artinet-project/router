@@ -1,5 +1,5 @@
 {
-  "version": "0.0.6",
+  "version": "0.0.7",
   "name": "@artinet/router",
   "description": "A tool for routing messages between A2A enabled AI agents that can call MCP servers.",
   "author": "artinet",
@@ -27,15 +27,18 @@
     "type": "git",
     "url": "https://github.com/the-artinet-project/router"
   },
+  "issues": {
+    "url": "https://github.com/the-artinet-project/router/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "types": "./dist/types/index.d.ts",
+  "types": "./dist/index.d.ts",
   "rootDir": ".",
   "exports": {
     ".": {
       "import": "./dist/index.js",
-      "types": "./dist/types/index.d.ts",
+      "types": "./dist/index.d.ts",
       "require": "./dist/index.js",
       "default": "./dist/index.js"
     }
@@ -52,7 +55,7 @@
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
   },
   "dependencies": {
-    "@artinet/sdk": "^0.5.7",
+    "@artinet/sdk": "^0.5.9",
     "@artinet/types": "0.0.4",
     "@modelcontextprotocol/sdk": "^1.19.1",
     "p-limit": "^7.1.1",

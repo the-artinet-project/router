@@ -2,9 +2,7 @@
 
 A tool for routing messages between A2A enabled AI agents and marshalling MCP tool servers.
 
-
 https://github.com/user-attachments/assets/b952b0f7-550a-44a3-b882-2bb3345be0b1
-
 
 ## Features
 
@@ -20,6 +18,14 @@ npm install @artinet/router
 ```
 
 ## Quick Start
+
+Use the [`create-agent`](https://www.npmjs.com/package/@artinet/create-agent) command:
+
+```bash
+npx @artinet/create-agent@latest
+```
+
+Select the [orchestrator agent](https://github.com/the-artinet-project/create-agent/blob/main/templates/orchestrator/src/agent.ts) to jump right into agent routing.
 
 ### Basic Usage
 
@@ -144,9 +150,13 @@ await router.close();
 - `createTool(server)` - Create tool from MCP server
 - `close()` - Close all connections
 
-### About
+## About
 
 This library leverages api.artinet.io to route commands to local agents & tools.
+
+## Deprecation Notice
+
+The `@modelcontextprotocol/sdk` will be changed to a peer dependancy in a future release.
 
 ## License
 
