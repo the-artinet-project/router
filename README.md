@@ -1,3 +1,12 @@
+
+[![Website](https://img.shields.io/badge/website-artinet.io-black)](https://artinet.io/)
+[![npm version](https://img.shields.io/npm/v/@artinet/router.svg)](https://www.npmjs.com/package/@artinet/router)
+[![npm downloads](https://img.shields.io/npm/dt/@artinet/router.svg)](https://www.npmjs.com/package/@artinet/router)
+[![Apache License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Known Vulnerabilities](https://snyk.io/test/npm/@artinet/router/badge.svg)](https://snyk.io/test/npm/@artinet/router)
+[![GitHub stars](https://img.shields.io/github/stars/the-artinet-project/router?style=social)](https://github.com/the-artinet-project/router/stargazers)
+[![Discord](https://dcbadge.limes.pink/api/server/DaxzSchmmX?style=flat)](https://dcbadge.limes.pink/api/server/DaxzSchmmX?style=flat)
+
 # @artinet/router
 
 A tool for routing messages between A2A enabled AI agents and marshalling MCP tool servers.
