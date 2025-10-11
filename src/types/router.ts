@@ -2,19 +2,33 @@
  * Copyright 2025 The Artinet Project
  * SPDX-License-Identifier: Apache-2.0
  */
-import { ConnectRequest } from "@artinet/types";
+import { ConnectRequest, ConnectResponse } from "@artinet/types";
 
-export interface RouterRequest extends Omit<ConnectRequest, "options"> {
+export type ApiProvider = (
+  connectRequest: ConnectRequest
+) => Promise<ConnectResponse>;
+
+export interface RouterRequest
+  extends Partial<Omit<ConnectRequest, "options" | "session">> {
+  session: ConnectRequest["session"];
   options?: Omit<ConnectRequest["options"], "tools" | "agents">;
+  apiProvider?: ApiProvider;
 }
+
+export interface TaskOptions {
+  taskId?: string;
+  maxIterations?: number;
+  callbackFunction?: (...args: any[]) => void;
+  abortSignal?: AbortSignal | undefined;
+}
+
 export interface RouterParams {
   message: string | RouterRequest;
   tools?: string[];
   agents?: string[];
-  callbackFunction?: (...args: any[]) => void;
-  taskId?: string;
-  abortController?: AbortController;
+  options?: Omit<TaskOptions, "callbackFunction">;
 }
+
 export interface IRouter {
   connect(params: RouterParams): Promise<string>;
   close(): Promise<void>;

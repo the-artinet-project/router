@@ -1,5 +1,10 @@
+/**
+ * Copyright 2025 The Artinet Project
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { execSync } from "child_process";
 import { platform } from "os";
+import { logger } from "./logger.js";
 //todo: use dotenvx?
 function expandShellVariable(variable: string): string {
   try {
@@ -19,7 +24,7 @@ function expandShellVariable(variable: string): string {
       return result.trim();
     }
   } catch (error) {
-    console.warn(`Failed to expand variable ${variable}:`, error);
+    logger.warn(`Failed to expand variable ${variable}:`, error);
     return variable;
   }
 }

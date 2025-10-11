@@ -17,31 +17,68 @@ import { AgentManager } from "../agents/index.js";
 import { AgentCard } from "@artinet/sdk";
 import { connectv1 } from "../api/connect.js";
 import { safeParseJSON } from "../utils/parse.js";
-import { RouterRequest } from "../types/index.js";
+import { ApiProvider } from "../types/index.js";
+
 export function parseResponse(response: ConnectResponse): string {
   return (
     safeParseJSON(response.agentResponse)?.data?.[0]?.generated_text ??
-    "failed to parse response: " +
-      (response.agentResponse ?? response.systemMessage ?? response.error)
-  );
+    `failed to parse response: ${
+      response.agentResponse ?? response.systemMessage ?? response.error
+    }`
+  ).trim();
 }
 
-export function updateSession(
-  session: Session,
-  message: SessionMessage
-): Session {
+function updateSession(session: Session, message: SessionMessage): Session {
   return {
     ...session,
     messages: [...session.messages, message],
   };
 }
 
+function addOptions(
+  connectOptions: ConnectOptions,
+  tools: ToolInfo[],
+  agents: AgentCard[]
+): ConnectOptions {
+  return {
+    ...connectOptions,
+    tools: {
+      ...connectOptions?.tools,
+      localServers: tools,
+    },
+    agents: {
+      ...connectOptions?.agents,
+      localServers: agents,
+    },
+  };
+}
+
+function addResults(
+  connectOptions: ConnectOptions,
+  tools: ToolResponse[] | undefined,
+  agents: AgentResponse[] | undefined
+): ConnectOptions {
+  return {
+    ...connectOptions,
+    tools: {
+      ...connectOptions?.tools,
+      results: tools,
+    },
+    agents: {
+      ...connectOptions?.agents,
+      responses: agents,
+    },
+  };
+}
+
 export class SessionManager {
   private connectRequest: ConnectRequest;
+  private api: ApiProvider;
   private responseText: string = "";
   private initialized: boolean = false;
-  constructor(connectRequest: RouterRequest) {
+  constructor(connectRequest: ConnectRequest, api: ApiProvider = connectv1) {
     this.connectRequest = connectRequest;
+    this.api = api;
   }
   get ConnectRequest(): ConnectRequest {
     return this.connectRequest;
@@ -52,7 +89,8 @@ export class SessionManager {
   get Initialized(): boolean {
     return this.initialized;
   }
-
+  //maintain async so that we can eventually lazily initialize the session (tools/agents)
+  //at which point well use promises to retrieve the tools/agents
   async initSession(
     toolIds: string[],
     agentIds: string[],
@@ -62,30 +100,25 @@ export class SessionManager {
     if (this.initialized) {
       throw new Error("Session is already initialized");
     }
+
     const localTools: ToolInfo[] = (
       await Promise.all(
         toolIds.map(async (id) => await toolManager.getTool(id)?.info)
       )
     ).filter((tool): tool is ToolInfo => tool !== undefined);
+
     const localAgents: AgentCard[] = (
       await Promise.all(
         agentIds.map(async (id) => await agentManager.getAgent(id)?.agentCard)
       )
     ).filter((agent): agent is AgentCard => agent !== undefined);
 
-    const connectOptions: ConnectOptions = {
-      ...this.connectRequest.options,
-      tools: {
-        ...this.connectRequest.options?.tools,
-        localServers: localTools,
-      },
-      agents: {
-        ...this.connectRequest.options?.agents,
-        localServers: localAgents,
-      },
-    };
+    this.connectRequest.options = addOptions(
+      this.connectRequest.options ?? {},
+      localTools,
+      localAgents
+    );
 
-    this.connectRequest.options = connectOptions;
     this.initialized = true;
     return this.connectRequest;
   }
@@ -94,9 +127,7 @@ export class SessionManager {
     message?: SessionMessage,
     toolResults?: ToolResponse[],
     agentResults?: AgentResponse[],
-    connectFunction?: (
-      connectRequest: ConnectRequest
-    ) => Promise<ConnectResponse>
+    apiProvider?: ApiProvider
   ): Promise<ConnectResponse> {
     if (!this.initialized) {
       throw new Error("Session is not initialized");
@@ -109,29 +140,13 @@ export class SessionManager {
       );
     }
 
-    if (toolResults) {
-      const connectOptions: ConnectOptions = {
-        ...this.connectRequest.options,
-        tools: {
-          ...(this.connectRequest.options?.tools ?? {}),
-          results: toolResults,
-        },
-      };
-      this.connectRequest.options = connectOptions;
-    }
+    this.connectRequest.options = addResults(
+      this.connectRequest.options ?? {},
+      toolResults,
+      agentResults
+    );
 
-    if (agentResults) {
-      const connectOptions: ConnectOptions = {
-        ...this.connectRequest.options,
-        agents: {
-          ...(this.connectRequest.options?.agents ?? {}),
-          responses: agentResults,
-        },
-      };
-      this.connectRequest.options = connectOptions;
-    }
-
-    const response: ConnectResponse = await (connectFunction ?? connectv1)(
+    const response: ConnectResponse = await (apiProvider ?? this.api)(
       this.connectRequest
     );
 

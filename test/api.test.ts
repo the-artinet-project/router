@@ -73,7 +73,7 @@ describe("API Tests", () => {
       options: {
         ...defaultProps.options,
         tools: {
-          ...defaultProps.options.tools,
+          ...defaultProps.options?.tools,
           localServers: [mcpInfo],
         },
       },
@@ -93,7 +93,7 @@ describe("API Tests", () => {
       options: {
         ...defaultProps.options,
         tools: {
-          ...defaultProps.options.tools,
+          ...defaultProps.options?.tools,
           localServers: [mcpInfo],
         },
       },
@@ -113,7 +113,7 @@ describe("API Tests", () => {
       options: {
         ...defaultProps.options,
         tools: {
-          ...defaultProps.options.tools,
+          ...defaultProps.options?.tools,
           localServers: [mcpInfo],
         },
       },
@@ -145,7 +145,7 @@ describe("API Tests", () => {
       options: {
         ...defaultProps.options,
         tools: {
-          ...defaultProps.options.tools,
+          ...defaultProps.options?.tools,
           localServers: [mcpInfo],
         },
       },
@@ -181,7 +181,7 @@ describe("API Tests", () => {
         ...initialProps.options,
         initialized: true,
         tools: {
-          ...initialProps.options.tools,
+          ...initialProps.options?.tools,
           results: [
             {
               callToolResult: toolResponse as CallToolResult,
@@ -234,7 +234,7 @@ describe("API Tests", () => {
       options: {
         ...defaultProps.options,
         agents: {
-          ...defaultProps.options.agents,
+          ...defaultProps.options?.agents,
           localServers: [testAgentCard],
         },
       },
@@ -285,7 +285,7 @@ describe("API Tests", () => {
       options: {
         ...defaultProps.options,
         agents: {
-          ...defaultProps.options.agents,
+          ...defaultProps.options?.agents,
           localServers: [echoAgent.agentCard],
         },
       },

@@ -9,10 +9,7 @@ import {
   InitializedTool,
 } from "../src/index.js";
 import { Client } from "@modelcontextprotocol/sdk/client";
-import {
-  StdioClientTransport,
-  StdioServerParameters,
-} from "@modelcontextprotocol/sdk/client/stdio.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { parseResponse } from "../src/router/session.js";
 import { Implementation } from "@modelcontextprotocol/sdk/types.js";
 jest.setTimeout(10000);

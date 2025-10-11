@@ -10,10 +10,8 @@ import {
   initClient,
   ToolManager,
   createTool,
-  createToolParams,
   InitializedTool,
 } from "../src/index.js";
-import { envArgsCapture } from "../src/utils/env-expand.js";
 jest.setTimeout(10000);
 
 const config: Config = {

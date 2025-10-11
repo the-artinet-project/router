@@ -2,7 +2,8 @@ import { jest, describe, afterEach, it, expect } from "@jest/globals";
 import { AgentManager } from "../src/index.js";
 import { createAgent } from "@artinet/sdk";
 import { echoAgentEngine, testAgentCard } from "./agents/echo-agent.js";
-
+import { callAgent, callAgents } from "../src/router/call-agents.js";
+import { AgentResponse, ToolResponse } from "@artinet/types";
 jest.setTimeout(10000);
 describe("Agent Tests", () => {
   const agentManager: AgentManager = new AgentManager();
@@ -67,5 +68,58 @@ describe("Agent Tests", () => {
     expect(agentIds).toBeDefined();
     expect(agentIds.length).toBe(1);
     expect(agentIds[0]).toBe("test-agent");
+  });
+  describe("callAgent", () => {
+    it("should call agent", async () => {
+      const agent = createAgent({
+        engine: echoAgentEngine,
+        agentCard: testAgentCard,
+      });
+      const response: AgentResponse | ToolResponse = await callAgent(
+        agent,
+        {
+          kind: "agent_request" as const,
+          uri: "test-agent",
+          directive: "test",
+        },
+        {
+          taskId: "test-task-id",
+        }
+      );
+      expect(response).toBeDefined();
+      expect(response as AgentResponse).toBeDefined();
+      expect(response.kind).toBe("agent_response");
+      expect((response as AgentResponse).uri).toBe("test-agent");
+      expect((response as AgentResponse).directive).toBe("test");
+      expect((response as AgentResponse).result).toBe(
+        '{"response":"test-message"}'
+      );
+    });
+    it("should call agents", async () => {
+      const agent = createAgent({
+        engine: echoAgentEngine,
+        agentCard: testAgentCard,
+      });
+      agentManager.setAgent(agent);
+      const responses: AgentResponse[] = await callAgents(
+        agentManager,
+        [
+          {
+            kind: "agent_request" as const,
+            uri: "test-agent",
+            directive: "test",
+          },
+        ],
+        {
+          taskId: "test-task-id",
+          callbackFunction: () => {},
+        }
+      );
+      expect(responses).toBeDefined();
+      expect(responses[0].kind).toBe("agent_response");
+      expect(responses[0].uri).toBe("test-agent");
+      expect(responses[0].directive).toBe("test");
+      expect(responses[0].result).toBe('{"response":"test-message"}');
+    });
   });
 });

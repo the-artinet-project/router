@@ -1,6 +1,6 @@
 import { jest, describe, it, expect } from "@jest/globals";
 import { ConnectRequest } from "@artinet/types";
-import { AgentCard, ContextManager } from "@artinet/sdk";
+import { AgentCard } from "@artinet/sdk";
 import { echoAgentEngine } from "./agents/echo-agent.js";
 import {
   LocalRouter,
@@ -8,6 +8,7 @@ import {
   AgentManager,
   RouterRequest,
 } from "../src/index.js";
+import { EventBus } from "../src/utils/event-bus.js";
 
 jest.setTimeout(10000);
 describe("Router Tests", () => {
@@ -63,6 +64,7 @@ describe("Router Tests", () => {
   it("should init router", async () => {
     const agentManager = new AgentManager();
     const toolManager = new ToolManager();
+    const abortController = new AbortController();
     const router = await LocalRouter.createRouter(
       {
         mcpServers: {
@@ -74,17 +76,27 @@ describe("Router Tests", () => {
           ],
         },
       },
-      new ContextManager(),
+      new EventBus(),
       toolManager,
       agentManager
     );
     expect(router).toBeDefined();
+    router.on("update", (state: any, update: any) => {
+      abortController.abort();
+    });
+    router.on("error", (error: any, state: any) => {
+      abortController.abort();
+    });
     const response = await router.connect({
       message: defaultProps,
       tools: ["example-servers/everything"],
       agents: ["test-agent"],
+      options: {
+        abortSignal: abortController.signal,
+      },
     });
     expect(response).toBeDefined();
+    expect(abortController.signal.aborted).toBe(true);
     await router.close();
   }, 40000);
   it("should init with echo agent", async () => {
@@ -101,7 +113,7 @@ describe("Router Tests", () => {
           ],
         },
       },
-      new ContextManager(),
+      new EventBus(),
       toolManager,
       agentManager
     );
@@ -110,6 +122,13 @@ describe("Router Tests", () => {
       agentCard: testAgentCard,
     });
     expect(router).toBeDefined();
+    const abortController = new AbortController();
+    router.on("update", (state: any, update: any) => {
+      abortController.abort();
+    });
+    router.on("error", (error: any, state: any) => {
+      abortController.abort();
+    });
     const response = await router.connect({
       message: {
         ...defaultProps,
@@ -123,9 +142,13 @@ describe("Router Tests", () => {
       },
       tools: ["example-servers/everything"],
       agents: ["test-agent"],
+      options: {
+        abortSignal: abortController.signal,
+      },
     });
     expect(response).toBeDefined();
     await router.close();
+    expect(abortController.signal.aborted).toBe(true);
   }, 40000);
   it("should send message", async () => {
     const toolManager = new ToolManager();
@@ -141,7 +164,7 @@ describe("Router Tests", () => {
           ],
         },
       },
-      new ContextManager(),
+      new EventBus(),
       toolManager,
       agentManager
     );
@@ -162,17 +185,82 @@ describe("Router Tests", () => {
         ],
       },
     };
+    router.on("update", (response: any[]) => {
+      callbackCalled = true;
+      abortController.abort();
+    });
+    router.on("error", (response: any[]) => {
+      callbackCalled = true;
+      abortController.abort();
+    });
     const response = await router
       .connect({
         message: routerRequest,
         tools: ["example-servers/everything"],
         agents: ["test-agent"],
-        callbackFunction: (response: any[]) => {
-          callbackCalled = true;
-          abortController.abort();
+        options: {
+          abortSignal: abortController.signal,
         },
-        taskId: undefined,
-        abortController: abortController,
+      })
+      .catch((error) => {
+        console.log("error: ", error);
+      });
+    expect(response).toBeDefined();
+    await router.close();
+    expect(abortController.signal.aborted).toBe(true);
+    expect(callbackCalled).toBe(true);
+  }, 30000);
+  it("should emit on tool response", async () => {
+    const toolManager = new ToolManager();
+    const agentManager = new AgentManager();
+    const router = await LocalRouter.createRouter(
+      {
+        mcpServers: {
+          stdioServers: [
+            {
+              command: "npx",
+              args: ["-y", "@modelcontextprotocol/server-everything"],
+            },
+          ],
+        },
+      },
+      new EventBus(),
+      toolManager,
+      agentManager
+    );
+    router.createAgent({
+      engine: echoAgentEngine,
+      agentCard: testAgentCard,
+    });
+    expect(router).toBeDefined();
+    const abortController = new AbortController();
+    let callbackCalled = false;
+    const routerRequest: RouterRequest = {
+      ...defaultProps,
+      session: {
+        ...defaultProps.session,
+        messages: [
+          ...defaultProps.session.messages,
+          { role: "user", content: "You are a test agent. Echo the input" },
+        ],
+      },
+    };
+    router.on("update", (response: any[]) => {
+      callbackCalled = true;
+      abortController.abort();
+    });
+    router.on("error", (response: any[]) => {
+      callbackCalled = true;
+      abortController.abort();
+    });
+    const response = await router
+      .connect({
+        message: routerRequest,
+        tools: ["example-servers/everything"],
+        // agents: ["test-agent"],
+        options: {
+          abortSignal: abortController.signal,
+        },
       })
       .catch((error) => {
         console.log("error: ", error);
@@ -196,7 +284,7 @@ describe("Router Tests", () => {
           ],
         },
       },
-      new ContextManager(),
+      new EventBus(),
       toolManager,
       agentManager
     );
@@ -207,26 +295,92 @@ describe("Router Tests", () => {
     expect(router).toBeDefined();
     const abortController = new AbortController();
     let callbackCalled = false;
-
+    router.on("update", (response: any[]) => {
+      callbackCalled = true;
+      abortController.abort();
+    });
     const response = await router
       .connect({
         message: "You are a test agent. Echo the input",
         tools: ["example-servers/everything"],
         agents: ["test-agent"],
-        callbackFunction: (response: any[]) => {
-          console.log("response: ", response);
-          callbackCalled = true;
-          abortController.abort();
+        options: {
+          abortSignal: abortController.signal,
         },
-        taskId: undefined,
-        abortController: abortController,
       })
       .catch((error) => {
         console.log("error: ", error);
       });
     expect(response).toBeDefined();
-    await router.close();
     expect(abortController.signal.aborted).toBe(true);
     expect(callbackCalled).toBe(true);
+    await router.close();
+  }, 30000);
+  it("should run as an agent", async () => {
+    const toolManager = new ToolManager();
+    const agentManager = new AgentManager();
+    const abortController = new AbortController();
+    const router = await LocalRouter.createRouter(
+      {
+        mcpServers: {
+          stdioServers: [
+            {
+              command: "npx",
+              args: ["-y", "@modelcontextprotocol/server-everything"],
+            },
+          ],
+        },
+      },
+      undefined,
+      toolManager,
+      agentManager,
+      {
+        abortSignal: abortController.signal,
+      }
+    );
+    router.on("update", (response: any[]) => {
+      abortController.abort();
+    });
+    router.on("error", (response: any[]) => {
+      abortController.abort();
+    });
+    router.createAgent({
+      engine: echoAgentEngine,
+      agentCard: testAgentCard,
+    });
+    const agent = router.toAgent(
+      "You are a test agent. Echo the input",
+      {
+        name: "main-agent",
+        description: "A test agent for unit tests",
+        skills: [
+          {
+            name: "test-skill",
+            description: "Echo the input",
+            id: "test-skill",
+            tags: ["test", "skill", "echo"],
+            examples: ["this input will be echoed"],
+            inputModes: ["text/plain"],
+            outputModes: ["text/plain"],
+          },
+        ],
+      },
+      {
+        tools: ["example-servers/everything"],
+        agents: ["test-agent"],
+      }
+    );
+    const response = await agent.sendMessage({
+      message: {
+        kind: "message",
+        messageId: "test-message-id",
+        role: "user",
+        parts: [{ kind: "text", text: "You are a test agent. Echo the input" }],
+      },
+    });
+    expect(response).toBeDefined();
+    expect(abortController.signal.aborted).toBe(true);
+
+    await router.close();
   }, 30000);
 });
