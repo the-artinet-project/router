@@ -12,7 +12,7 @@ A tool for routing messages between A2A enabled AI agents and marshalling MCP to
 
 https://github.com/user-attachments/assets/b952b0f7-550a-44a3-b882-2bb3345be0b1
 
-**Breaking Changes in v0.0.7**
+**Breaking Changes in v0.0.8**
 
 - `callbackFunction` has been removed from `router.connect` infavor of event emissions ([see below](#router-with-agents)).
 - Sub-agent calls now use their own unique `taskId`s to prevent task overlap.
