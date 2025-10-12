@@ -12,3 +12,4 @@ test/bundle.test.ts
 artinet.log
 package-publish.json
 .vscode
+.github

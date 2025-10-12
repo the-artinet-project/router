@@ -35,9 +35,7 @@ export const echoAgentEngine: AgentEngine = async function* (context: Context) {
       message: {
         kind: "message",
         role: "agent",
-        parts: [
-          { kind: "text", text: JSON.stringify({ response: "test-message" }) },
-        ],
+        parts: [{ kind: "text", text: JSON.stringify({ response: userText }) }],
         messageId: context.command.message.messageId ?? "",
       },
     },

@@ -1,13 +1,4 @@
-import {
-  jest,
-  describe,
-  beforeEach,
-  afterEach,
-  beforeAll,
-  afterAll,
-  it,
-  expect,
-} from "@jest/globals";
+import { jest, describe, beforeAll, afterAll, it, expect } from "@jest/globals";
 import { ConnectRequest, Session, ToolInfo } from "@artinet/types";
 import { connectv1 } from "../src/api/connect.js";
 import { Client } from "@modelcontextprotocol/sdk/client";
@@ -19,7 +10,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { initClient, getToolInfo } from "../src/tools/index.js";
 import { AgentCard, createAgent } from "@artinet/sdk";
 import { echoAgentEngine } from "./agents/echo-agent.js";
-
+import { safeClose, safeStdioTransport } from "../src/utils/safeTransport.js";
 jest.setTimeout(10000);
 describe("API Tests", () => {
   let defaultProps: ConnectRequest = {
@@ -48,7 +39,7 @@ describe("API Tests", () => {
   let transport: StdioClientTransport;
   let client: Client;
   beforeAll(async () => {
-    transport = new StdioClientTransport({
+    transport = safeStdioTransport({
       command: "npx",
       args: ["-y", "@modelcontextprotocol/server-everything"],
     });
@@ -59,8 +50,7 @@ describe("API Tests", () => {
     );
   });
   afterAll(async () => {
-    await client.close();
-    await transport.close();
+    await safeClose(client, transport);
   });
   it("should connect to api", async () => {
     const response = await connectv1(defaultProps);
@@ -78,6 +68,7 @@ describe("API Tests", () => {
         },
       },
     });
+    expect(response).toBeDefined();
   }, 20000);
   it("should get tool request", async () => {
     const mcpInfo: ToolInfo = await getToolInfo(client);
@@ -98,6 +89,7 @@ describe("API Tests", () => {
         },
       },
     });
+    expect(response).toBeDefined();
   }, 20000);
   it("should request and execute a tool", async () => {
     const mcpInfo: ToolInfo = await getToolInfo(client);

@@ -11,7 +11,8 @@ import { safeParse } from "../utils/parse.js";
 import { logger } from "../utils/logger.js";
 
 export async function connectv1(
-  props: ConnectRequest
+  props: ConnectRequest,
+  abortSignal?: AbortSignal
 ): Promise<ConnectResponse> {
   try {
     const restResponse = await fetch(
@@ -28,6 +29,7 @@ export async function connectv1(
         body: JSON.stringify({
           ...props,
         }),
+        signal: abortSignal,
       }
     );
     // logger.log("connectv1: ", "restResponse: ", restResponse);
@@ -42,11 +44,10 @@ export async function connectv1(
       );
     }
 
-    const bodyJson = await restResponse.json();
-    // logger.log("connectv1: ", "bodyJson: ", bodyJson);
-    return safeParse(bodyJson.body, ConnectResponseSchema).data; //todo use TRPC
+    const responseJson = await restResponse.json();
+    return safeParse(responseJson.body, ConnectResponseSchema).data; //todo use TRPC
   } catch (error: any) {
-    logger.error("connectv1: ", "Error fetching agent response:", error);
+    logger.error("connectv1: ", "Error connecting to api:", error);
     return {
       agentResponse: JSON.stringify(
         [

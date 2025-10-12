@@ -91,9 +91,7 @@ describe("Agent Tests", () => {
       expect(response.kind).toBe("agent_response");
       expect((response as AgentResponse).uri).toBe("test-agent");
       expect((response as AgentResponse).directive).toBe("test");
-      expect((response as AgentResponse).result).toBe(
-        '{"response":"test-message"}'
-      );
+      expect((response as AgentResponse).result).toBe('{"response":"test"}');
     });
     it("should call agents", async () => {
       const agent = createAgent({
@@ -119,7 +117,7 @@ describe("Agent Tests", () => {
       expect(responses[0].kind).toBe("agent_response");
       expect(responses[0].uri).toBe("test-agent");
       expect(responses[0].directive).toBe("test");
-      expect(responses[0].result).toBe('{"response":"test-message"}');
+      expect(responses[0].result).toBe('{"response":"test"}');
     });
   });
 });

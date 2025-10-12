@@ -186,7 +186,11 @@ export class LocalRouter implements IRouter {
       params,
       this.defaultOptions
     );
-    const sessionManager = new SessionManager(connectRequest, api);
+    const sessionManager = new SessionManager(
+      connectRequest,
+      api,
+      options.abortSignal
+    );
     await sessionManager
       .initSession(
         tools ?? [],
@@ -221,6 +225,7 @@ export class LocalRouter implements IRouter {
   async close(): Promise<void> {
     await this.agentManager.close();
     await this.toolManager.close();
+    await this.removeAllListeners();
   }
 
   /**

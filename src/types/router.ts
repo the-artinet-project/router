@@ -5,7 +5,8 @@
 import { ConnectRequest, ConnectResponse } from "@artinet/types";
 
 export type ApiProvider = (
-  connectRequest: ConnectRequest
+  connectRequest: ConnectRequest,
+  abortSignal?: AbortSignal
 ) => Promise<ConnectResponse>;
 
 export interface RouterRequest

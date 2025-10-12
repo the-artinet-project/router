@@ -1,6 +1,6 @@
 import { jest, describe, it, expect } from "@jest/globals";
 import { ConnectRequest } from "@artinet/types";
-import { AgentCard, ContextManager } from "@artinet/sdk";
+// import { AgentCard } from "@artinet/sdk";
 import { LocalRouter, ToolManager, AgentManager } from "../src/index.js";
 import { EventBus } from "../src/utils/event-bus.js";
 
@@ -29,31 +29,31 @@ describe("Router Tests", () => {
       },
     },
   };
-  const testAgentCard: AgentCard = {
-    description: "A test agent for unit tests",
-    name: "test-agent",
-    url: "https://test-agent.com",
-    protocolVersion: "0.3.0",
-    version: "1.0.0",
-    capabilities: {
-      extensions: [],
-      streaming: false,
-      pushNotifications: false,
-    },
-    defaultInputModes: [],
-    defaultOutputModes: [],
-    skills: [
-      {
-        id: "test-skill",
-        name: "echo",
-        description: "Echo the input",
-        tags: ["test", "skill", "echo"],
-        examples: ["this input will be echoed"],
-        inputModes: ["text/plain"],
-        outputModes: ["text/plain"],
-      },
-    ],
-  };
+  // const testAgentCard: AgentCard = {
+  //   description: "A test agent for unit tests",
+  //   name: "test-agent",
+  //   url: "https://test-agent.com",
+  //   protocolVersion: "0.3.0",
+  //   version: "1.0.0",
+  //   capabilities: {
+  //     extensions: [],
+  //     streaming: false,
+  //     pushNotifications: false,
+  //   },
+  //   defaultInputModes: [],
+  //   defaultOutputModes: [],
+  //   skills: [
+  //     {
+  //       id: "test-skill",
+  //       name: "echo",
+  //       description: "Echo the input",
+  //       tags: ["test", "skill", "echo"],
+  //       examples: ["this input will be echoed"],
+  //       inputModes: ["text/plain"],
+  //       outputModes: ["text/plain"],
+  //     },
+  //   ],
+  // };
 
   it("should init router", async () => {
     const agentManager = new AgentManager();

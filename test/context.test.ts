@@ -1,34 +1,33 @@
 import { jest, describe, it, expect } from "@jest/globals";
-import { ConnectRequest } from "@artinet/types";
+// import { ConnectRequest } from "@artinet/types";
 import { LocalRouter } from "../src/index.js";
-import { RouterContextManager } from "../src/utils/context-manager.js";
 import { echoAgentEngine } from "./agents/echo-agent.js";
 import { testAgentCard } from "./agents/echo-agent.js";
 jest.setTimeout(10000);
 describe("Context Tests", () => {
-  let request: ConnectRequest = {
-    identifier:
-      "0xf7dcee219e1a4027191508511c99ea64fe7202c71df416b5e5ed03cc2e6b386f",
-    session: { messages: [{ role: "user", content: "test-message" }] },
-    preferredEndpoint: "hf-inference",
-    options: {
-      isAuthRequired: false,
-      isFallbackAllowed: false,
-      params: {
-        test: "test",
-      },
-      tools: {
-        remoteServers: [],
-        localServers: [],
-        results: [],
-      },
-      agents: {
-        localServers: [],
-        remoteServers: [],
-        responses: [],
-      },
-    },
-  };
+  // let request: ConnectRequest = {
+  //   identifier:
+  //     "0xf7dcee219e1a4027191508511c99ea64fe7202c71df416b5e5ed03cc2e6b386f",
+  //   session: { messages: [{ role: "user", content: "test-message" }] },
+  //   preferredEndpoint: "hf-inference",
+  //   options: {
+  //     isAuthRequired: false,
+  //     isFallbackAllowed: false,
+  //     params: {
+  //       test: "test",
+  //     },
+  //     tools: {
+  //       remoteServers: [],
+  //       localServers: [],
+  //       results: [],
+  //     },
+  //     agents: {
+  //       localServers: [],
+  //       remoteServers: [],
+  //       responses: [],
+  //     },
+  //   },
+  // };
 
   it("should emit updates", async () => {
     const router = new LocalRouter();

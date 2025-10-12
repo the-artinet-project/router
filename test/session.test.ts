@@ -9,9 +9,9 @@ import {
   InitializedTool,
 } from "../src/index.js";
 import { Client } from "@modelcontextprotocol/sdk/client";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { parseResponse } from "../src/router/session.js";
 import { Implementation } from "@modelcontextprotocol/sdk/types.js";
+import { safeStdioTransport } from "../src/utils/safeTransport.js";
 jest.setTimeout(10000);
 describe("Session Tests", () => {
   let request: ConnectRequest = {
@@ -62,7 +62,7 @@ describe("Session Tests", () => {
             version: "1.0.0",
             title: "test-tool",
           }),
-          transport: new StdioClientTransport({
+          transport: safeStdioTransport({
             command: "npx",
             args: ["-y", "@modelcontextprotocol/server-everything"],
           }),
@@ -79,10 +79,11 @@ describe("Session Tests", () => {
         },
       ],
     ]);
+    const toolManager = new ToolManager(toolMap);
     const newRequest = await sessionManager.initSession(
       ["test-tool"],
       ["test-agent"],
-      new ToolManager(toolMap),
+      toolManager,
       new AgentManager()
     );
     expect(newRequest).toBeDefined();
@@ -91,12 +92,13 @@ describe("Session Tests", () => {
     expect(
       newRequest.options?.tools?.localServers?.[0].implementation.name
     ).toBe("test-tool");
+    await toolManager.close();
   });
 
   it("should send message", async () => {
     const sessionManager = new SessionManager(request);
 
-    const transport = new StdioClientTransport({
+    const transport = safeStdioTransport({
       command: "npx",
       args: ["-y", "@modelcontextprotocol/server-everything"],
     });
@@ -106,22 +108,22 @@ describe("Session Tests", () => {
       {},
       transport
     );
-
+    const toolManager = new ToolManager(
+      new Map([
+        [
+          "test-tool",
+          {
+            client: client,
+            transport: transport,
+            info: await getToolInfo(client),
+          },
+        ],
+      ])
+    );
     const newRequest = await sessionManager.initSession(
       ["test-tool"],
       ["test-agent"],
-      new ToolManager(
-        new Map([
-          [
-            "test-tool",
-            {
-              client: client,
-              transport: transport,
-              info: await getToolInfo(client),
-            },
-          ],
-        ])
-      ),
+      toolManager,
       new AgentManager()
     );
     expect(newRequest).toBeDefined();
@@ -137,7 +139,6 @@ describe("Session Tests", () => {
     expect(
       response.options?.tools?.requests?.[0]?.callToolRequest
     ).toBeDefined();
-    await client.close();
-    await transport.close();
+    await toolManager.close();
   }, 30000);
 });

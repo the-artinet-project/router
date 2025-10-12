@@ -12,6 +12,7 @@ import {
   createTool,
   InitializedTool,
 } from "../src/index.js";
+import { safeStdioTransport, safeClose } from "../src/utils/safeTransport.js";
 jest.setTimeout(10000);
 
 const config: Config = {
@@ -38,22 +39,30 @@ describe("Tool Tests", () => {
     await toolManager.close();
   });
   it("should init client", async () => {
+    const transport = safeStdioTransport({
+      ...(config["server-everything"] as StdioServerParameters),
+    });
     const client: Client = await initClient(
       { name: "MCP Client", version: "1.0.0" },
       {},
-      new StdioClientTransport(
-        config["server-everything"] as StdioServerParameters
-      )
+      transport
     );
     expect(client).toBeDefined();
+    await safeClose(client, transport);
+  });
+  let tool: InitializedTool | undefined;
+  afterEach(async () => {
+    if (tool) {
+      await safeClose(tool.client, tool.transport as StdioClientTransport);
+    }
   });
   describe("get tool info", () => {
     let client: Client;
     let transport: StdioClientTransport;
     beforeAll(async () => {
-      transport = new StdioClientTransport(
-        config["server-everything"] as StdioServerParameters
-      );
+      transport = safeStdioTransport({
+        ...(config["server-everything"] as StdioServerParameters),
+      });
       client = await initClient(
         { name: "MCP Client", version: "1.0.0" },
         {},
@@ -61,8 +70,7 @@ describe("Tool Tests", () => {
       );
     });
     afterAll(async () => {
-      await client.close();
-      await transport.close();
+      await safeClose(client, transport);
     });
     it("should get tool info", async () => {
       const toolInfo: ToolInfo = await getToolInfo(client);
@@ -80,7 +88,7 @@ describe("Tool Tests", () => {
     });
   });
   it("should create Tool", async () => {
-    const tool: InitializedTool = await createTool({
+    tool = await createTool({
       toolServer: config["server-everything"] as StdioServerParameters,
     });
     expect(tool).toBeDefined();
@@ -89,12 +97,10 @@ describe("Tool Tests", () => {
     expect(tool.info.tools?.length).toBe(10);
     expect(tool.client).toBeDefined();
     expect(tool.transport).toBeDefined();
-    tool.client.close();
-    tool.transport.close();
   });
 
   it("should expand env vars", async () => {
-    const tool: InitializedTool = await createTool({
+    tool = await createTool({
       toolServer: config["server-filesystem"] as StdioServerParameters,
     });
     expect(tool).toBeDefined();
@@ -103,7 +109,5 @@ describe("Tool Tests", () => {
     expect(tool.info.tools?.length).toBe(14);
     expect(tool.client).toBeDefined();
     expect(tool.transport).toBeDefined();
-    tool.client.close();
-    tool.transport.close();
   });
 });

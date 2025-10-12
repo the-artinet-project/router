@@ -74,11 +74,17 @@ function addResults(
 export class SessionManager {
   private connectRequest: ConnectRequest;
   private api: ApiProvider;
+  private abortSignal?: AbortSignal;
   private responseText: string = "";
   private initialized: boolean = false;
-  constructor(connectRequest: ConnectRequest, api: ApiProvider = connectv1) {
+  constructor(
+    connectRequest: ConnectRequest,
+    api: ApiProvider = connectv1,
+    abortSignal?: AbortSignal
+  ) {
     this.connectRequest = connectRequest;
     this.api = api;
+    this.abortSignal = abortSignal;
   }
   get ConnectRequest(): ConnectRequest {
     return this.connectRequest;
@@ -147,7 +153,8 @@ export class SessionManager {
     );
 
     const response: ConnectResponse = await (apiProvider ?? this.api)(
-      this.connectRequest
+      this.connectRequest,
+      this.abortSignal
     );
 
     this.responseText = parseResponse(response);

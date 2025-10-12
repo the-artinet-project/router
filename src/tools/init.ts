@@ -26,6 +26,7 @@ import { ToolInfo } from "@artinet/types";
 import { logger } from "../utils/logger.js";
 import { InitializedTool } from "../types/index.js";
 import { envArgsCapture } from "../utils/env-expand.js";
+import { safeStdioTransport } from "../utils/safeTransport.js";
 
 export async function initClient(
   implementation: Implementation = {
@@ -55,10 +56,9 @@ export async function createTool(
 ): Promise<InitializedTool> {
   const transport =
     params.transport ||
-    new StdioClientTransport({
+    safeStdioTransport({
       ...params.toolServer,
       args: envArgsCapture(params.toolServer.args ?? []),
-      stderr: params.toolServer.stderr ?? "pipe",
     });
   const client: Client | undefined = await initClient(
     params.implementation || { name: uuidv4(), version: "1.0.0" },

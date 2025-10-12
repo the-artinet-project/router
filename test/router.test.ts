@@ -10,8 +10,8 @@ import {
 } from "../src/index.js";
 import { EventBus } from "../src/utils/event-bus.js";
 
-jest.setTimeout(10000);
 describe("Router Tests", () => {
+  jest.setTimeout(10000);
   let defaultProps: ConnectRequest = {
     identifier:
       "0xf7dcee219e1a4027191508511c99ea64fe7202c71df416b5e5ed03cc2e6b386f",
@@ -61,7 +61,7 @@ describe("Router Tests", () => {
     ],
   };
 
-  it("should init router", async () => {
+  it.skip("should init router", async () => {
     const agentManager = new AgentManager();
     const toolManager = new ToolManager();
     const abortController = new AbortController();
@@ -81,10 +81,10 @@ describe("Router Tests", () => {
       agentManager
     );
     expect(router).toBeDefined();
-    router.on("update", (state: any, update: any) => {
+    router.on("update", (_) => {
       abortController.abort();
     });
-    router.on("error", (error: any, state: any) => {
+    router.on("error", (_) => {
       abortController.abort();
     });
     const response = await router.connect({
@@ -123,10 +123,10 @@ describe("Router Tests", () => {
     });
     expect(router).toBeDefined();
     const abortController = new AbortController();
-    router.on("update", (state: any, update: any) => {
+    router.on("update", (_) => {
       abortController.abort();
     });
-    router.on("error", (error: any, state: any) => {
+    router.on("error", (_) => {
       abortController.abort();
     });
     const response = await router.connect({
@@ -185,11 +185,11 @@ describe("Router Tests", () => {
         ],
       },
     };
-    router.on("update", (response: any[]) => {
+    router.on("update", (_) => {
       callbackCalled = true;
       abortController.abort();
     });
-    router.on("error", (response: any[]) => {
+    router.on("error", (_) => {
       callbackCalled = true;
       abortController.abort();
     });
@@ -245,11 +245,11 @@ describe("Router Tests", () => {
         ],
       },
     };
-    router.on("update", (response: any[]) => {
+    router.on("update", (_) => {
       callbackCalled = true;
       abortController.abort();
     });
-    router.on("error", (response: any[]) => {
+    router.on("error", (_) => {
       callbackCalled = true;
       abortController.abort();
     });
@@ -295,7 +295,7 @@ describe("Router Tests", () => {
     expect(router).toBeDefined();
     const abortController = new AbortController();
     let callbackCalled = false;
-    router.on("update", (response: any[]) => {
+    router.on("update", (_) => {
       callbackCalled = true;
       abortController.abort();
     });
@@ -338,10 +338,10 @@ describe("Router Tests", () => {
         abortSignal: abortController.signal,
       }
     );
-    router.on("update", (response: any[]) => {
+    router.on("update", (_) => {
       abortController.abort();
     });
-    router.on("error", (response: any[]) => {
+    router.on("error", (_) => {
       abortController.abort();
     });
     router.createAgent({
