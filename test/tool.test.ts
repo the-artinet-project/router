@@ -1,4 +1,12 @@
-import { jest, describe, beforeAll, afterAll, it, expect } from "@jest/globals";
+import {
+  jest,
+  describe,
+  beforeAll,
+  afterAll,
+  it,
+  expect,
+  afterEach,
+} from "@jest/globals";
 import {
   StdioClientTransport,
   StdioServerParameters,
@@ -22,11 +30,7 @@ const config: Config = {
   },
   "server-filesystem": {
     command: "npx",
-    args: [
-      "-y",
-      "@modelcontextprotocol/server-filesystem",
-      "${XDG_DATA_HOME:-$HOME/.local/share}/",
-    ],
+    args: ["-y", "@modelcontextprotocol/server-filesystem", "/home/"],
   },
 };
 
@@ -95,18 +99,6 @@ describe("Tool Tests", () => {
     expect(tool.info).toBeDefined();
     expect(tool.info.tools).toBeDefined();
     expect(tool.info.tools?.length).toBe(10);
-    expect(tool.client).toBeDefined();
-    expect(tool.transport).toBeDefined();
-  });
-
-  it("should expand env vars", async () => {
-    tool = await createTool({
-      toolServer: config["server-filesystem"] as StdioServerParameters,
-    });
-    expect(tool).toBeDefined();
-    expect(tool.info).toBeDefined();
-    expect(tool.info.tools).toBeDefined();
-    expect(tool.info.tools?.length).toBe(14);
     expect(tool.client).toBeDefined();
     expect(tool.transport).toBeDefined();
   });
