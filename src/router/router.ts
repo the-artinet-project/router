@@ -31,7 +31,7 @@ import { SessionManager } from "./session.js";
 import { executeTask } from "./task.js";
 import { EventBus } from "../utils/event-bus.js";
 import { v4 as uuidv4 } from "uuid";
-import { connectv1 } from "~/api/connect.js";
+import { connectv1 } from "../api/connect.js";
 import { wrapRouter } from "./agent-wrapper.js";
 
 export const defaultConnectRequest: ConnectRequest = {

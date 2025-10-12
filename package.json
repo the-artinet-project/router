@@ -1,5 +1,5 @@
 {
-  "version": "0.0.8",
+  "version": "0.0.9",
   "name": "@artinet/router",
   "description": "A tool for routing messages between A2A enabled AI agents that can call MCP servers.",
   "author": "artinet",

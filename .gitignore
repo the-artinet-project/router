@@ -4,7 +4,6 @@ dist
 node_modules
 publish-temp
 .env
-package-lock.json
 output.txt
 artinet-router-*.tgz
 scripts
