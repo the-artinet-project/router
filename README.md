@@ -4,7 +4,7 @@
 [![Apache License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Known Vulnerabilities](https://snyk.io/test/npm/@artinet/router/badge.svg)](https://snyk.io/test/npm/@artinet/router)
 [![GitHub stars](https://img.shields.io/github/stars/the-artinet-project/router?style=social)](https://github.com/the-artinet-project/router/stargazers)
-[![Discord](https://dcbadge.limes.pink/api/server/DaxzSchmmX?style=flat)](https://dcbadge.limes.pink/api/server/DaxzSchmmX?style=flat)
+[![Discord](https://dcbadge.limes.pink/api/server/DaxzSchmmX?style=flat)](https://discord.gg/DaxzSchmmX)
 
 # @artinet/router
 
