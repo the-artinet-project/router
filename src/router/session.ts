@@ -18,6 +18,7 @@ import { AgentCard } from "@artinet/sdk";
 import { connectv1 } from "../api/connect.js";
 import { safeParseJSON } from "../utils/parse.js";
 import { ApiProvider } from "../types/index.js";
+import { v4 as uuidv4 } from "uuid";
 
 export function parseResponse(response: ConnectResponse): string {
   return (
@@ -70,13 +71,17 @@ function addResults(
     },
   };
 }
-
+export interface SubSession {
+  taskId: string;
+  iterations: number;
+}
 export class SessionManager {
   private connectRequest: ConnectRequest;
   private api: ApiProvider;
   private abortSignal?: AbortSignal;
   private responseText: string = "";
   private initialized: boolean = false;
+  private subSessions: Record<string, SubSession> = {};
   constructor(
     connectRequest: ConnectRequest,
     api: ApiProvider = connectv1,
@@ -94,6 +99,9 @@ export class SessionManager {
   }
   get Initialized(): boolean {
     return this.initialized;
+  }
+  get SubSessions(): Record<string, SubSession> {
+    return this.subSessions;
   }
   //maintain async so that we can eventually lazily initialize the session (tools/agents)
   //at which point well use promises to retrieve the tools/agents
@@ -118,6 +126,10 @@ export class SessionManager {
         agentIds.map(async (id) => await agentManager.getAgent(id)?.agentCard)
       )
     ).filter((agent): agent is AgentCard => agent !== undefined);
+
+    for (const agent of localAgents) {
+      this.subSessions[agent.name] = { taskId: uuidv4(), iterations: 0 };
+    }
 
     this.connectRequest.options = addOptions(
       this.connectRequest.options ?? {},

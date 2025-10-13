@@ -119,5 +119,35 @@ describe("Agent Tests", () => {
       expect(responses[0].directive).toBe("test");
       expect(responses[0].result).toBe('{"response":"test"}');
     });
+    it("should pass subsession", async () => {
+      const agent = createAgent({
+        engine: echoAgentEngine,
+        agentCard: testAgentCard,
+      });
+      agentManager.setAgent(agent);
+      await callAgents(
+        agentManager,
+        [
+          {
+            kind: "agent_request" as const,
+            uri: "test-agent",
+            directive: "test",
+          },
+        ],
+        {
+          taskId: "test-task-id-false",
+          callbackFunction: () => {},
+        },
+        {
+          "test-agent": {
+            taskId: "test-task-id-true",
+            iterations: 0,
+          },
+        }
+      );
+      const state = await agent.getState("test-task-id-true");
+      expect(state).toBeDefined();
+      expect(state?.task.id).toBe("test-task-id-true");
+    });
   });
 });

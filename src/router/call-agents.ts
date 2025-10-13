@@ -17,6 +17,7 @@ import { getContent } from "../utils/get-content.js";
 import { safeParse } from "../utils/parse.js";
 import { AgentManager } from "../agents/index.js";
 import pLimit from "p-limit";
+import { SubSession } from "./session.js";
 
 export async function callAgent(
   agent: A2AServiceInterface,
@@ -55,7 +56,7 @@ export async function callAgent(
       safeParse(content, ToolResponseSchema);
     if (parseResult.success) {
       const mcpArgs: ToolResponse = parseResult.data;
-      mcpArgs.name = " 📨 " + agentRequest.uri + " 🔧 " + mcpArgs.name; //indicator that this is subagent calling the tool
+      mcpArgs.name = `📨 ${agentRequest.uri} 🔧 ${mcpArgs.name}`; //indicator that this is subagent calling the tool
       return mcpArgs;
     }
   } else if (content !== "" && content !== "{}" && content !== "[]") {
@@ -80,12 +81,13 @@ export async function callAgents(
   agentRequests: AgentRequest[],
   options: Required<Omit<TaskOptions, "maxIterations" | "abortSignal">> & {
     abortSignal?: AbortSignal | undefined;
-  }
+  },
+  subSessions?: Record<string, SubSession>
 ): Promise<AgentResponse[]> {
   if (agentRequests.length === 0) {
     return [];
   }
-  const { taskId, callbackFunction } = options;
+  const { taskId: parentTaskId, callbackFunction } = options;
   let agentResponses: AgentResponse[] = [];
   const limit = pLimit(10);
   await Promise.all(
@@ -93,29 +95,27 @@ export async function callAgents(
       limit(async () => {
         const agent = agentManager.getAgent(agentRequest.uri);
         if (!agent) {
-          logger.error("agent not found[agent:" + agentRequest.uri + "]");
+          logger.error(
+            `agent not found[agent:${agentRequest.uri}][parent-task:${parentTaskId}]`
+          );
           return;
         }
         const agentReply: AgentResponse | ToolResponse | undefined =
           await callAgent(agent, agentRequest, {
             ...options,
             //each agent-call should have a unique taskId to avoid conflicts
-            taskId: uuidv4(),
+            taskId: subSessions?.[agentRequest.uri]?.taskId ?? uuidv4(),
           }).catch((error) => {
             logger.error(
-              "error calling agent[agent:" + agentRequest.uri + "]: ",
+              `error calling agent[agent:${agentRequest.uri}][parent-task:${parentTaskId}]: `,
               error instanceof Error ? error.message : JSON.stringify(error)
             );
             return undefined;
           });
         if (!agentReply) {
           logger.error(
-            "no response from agent[agent:" +
-              agentRequest.uri +
-              "][task:" +
-              taskId +
-              "]: ",
-            agentRequest.uri
+            `no response from agent[agent:${agentRequest.uri}][parent-task:${parentTaskId}]: `,
+            agentReply
           );
           return;
         }

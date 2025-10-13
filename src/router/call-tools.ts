@@ -10,7 +10,37 @@ import { ToolResponse, ToolRequest } from "@artinet/types";
 import { TaskOptions } from "../types/index.js";
 import { ToolManager } from "../tools/index.js";
 import pLimit from "p-limit";
+import { logger } from "@artinet/sdk";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
+export type ToolOptions = Required<
+  Omit<
+    TaskOptions,
+    "taskId" | "maxIterations" | "respondOnFinalOnly" | "abortSignal"
+  >
+>;
+
+function createStderrMonitor(
+  toolRequest: ToolRequest,
+  options: ToolOptions
+): (data: Buffer) => void {
+  const request = toolRequest.callToolRequest;
+  const requestParams = request.params;
+  const toolName = requestParams.name;
+  const { callbackFunction } = options;
+  return (data: Buffer) => {
+    callbackFunction({
+      kind: "tool_response",
+      name: toolName,
+      id: toolRequest.id,
+      callToolRequest: request,
+      callToolResult: {
+        content: [{ type: "text", text: data.toString() }],
+      },
+    });
+    logger.warn("callTools: stderr: ", data.toString());
+  };
+}
 /**
  * Calls tools and returns the responses.
  * @returns The tool responses.
@@ -34,35 +64,62 @@ export async function callTools(
   await Promise.all(
     toolRequests.map((toolRequest) =>
       limit(async () => {
-        const toolResponse:
-          | CompatibilityCallToolResult
-          | CallToolResult
-          | undefined = await toolManager
-          .getTool(toolRequest.id)
-          ?.client.callTool(toolRequest.callToolRequest.params)
-          .catch((error) => {
-            return {
-              content: [
-                {
-                  type: "text",
-                  text:
-                    error instanceof Error
-                      ? error.message
-                      : JSON.stringify(error),
-                },
-              ],
-            } as CallToolResult;
-          });
-        if (toolResponse) {
-          const toolResponseArgs: ToolResponse = {
-            kind: "tool_response",
-            name: toolRequest.callToolRequest.params.name,
-            id: toolRequest.id,
-            callToolRequest: toolRequest.callToolRequest,
-            callToolResult: toolResponse as CallToolResult,
-          };
-          callbackFunction(toolResponseArgs);
-          toolResponses.push(toolResponseArgs);
+        const tool = toolManager.getTool(toolRequest.id);
+        if (!tool) {
+          logger.error(
+            "callTools: tool not found[tool:" + toolRequest.id + "]"
+          );
+          return;
+        }
+        const request = toolRequest.callToolRequest;
+        const requestParams = request.params;
+        const toolName = requestParams.name;
+        //monitor the error stream
+        const errStreamCallback = createStderrMonitor(toolRequest, options);
+        try {
+          (tool.transport as StdioClientTransport)?.stderr?.on(
+            "data",
+            errStreamCallback
+          );
+          const toolResponse:
+            | CompatibilityCallToolResult
+            | CallToolResult
+            | undefined = await tool.client
+            ?.callTool(requestParams)
+            .catch((error) => {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text:
+                      error instanceof Error
+                        ? error.message
+                        : JSON.stringify(error),
+                  },
+                ],
+              } as CallToolResult;
+            });
+          if (toolResponse) {
+            const toolResponseArgs: ToolResponse = {
+              kind: "tool_response",
+              name: toolName,
+              id: toolRequest.id,
+              callToolRequest: request,
+              callToolResult: toolResponse as CallToolResult,
+            };
+            callbackFunction(toolResponseArgs);
+            toolResponses.push(toolResponseArgs);
+          }
+        } catch (error) {
+          logger.error(
+            "error calling tool[tool:" + toolRequest.id + "]: ",
+            error
+          );
+        } finally {
+          (tool.transport as StdioClientTransport)?.stderr?.off(
+            "data",
+            errStreamCallback
+          );
         }
         return;
       })

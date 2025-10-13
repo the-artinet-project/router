@@ -87,7 +87,8 @@ In the final response, the assistant will also provide the user with suggestions
     const latestAgentResponses: AgentResponse[] = await callAgents(
       agentManager,
       agentRequests,
-      fullTaskOptions
+      fullTaskOptions,
+      sessionManager.SubSessions
     ).catch((error) => {
       logger.error(
         `error calling agents[task:${fullTaskOptions.taskId}][${iteration}]: `,
