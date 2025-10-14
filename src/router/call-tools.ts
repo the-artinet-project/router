@@ -10,15 +10,10 @@ import { ToolResponse, ToolRequest } from "@artinet/types";
 import { TaskOptions } from "../types/index.js";
 import { ToolManager } from "../tools/index.js";
 import pLimit from "p-limit";
-import { logger } from "@artinet/sdk";
+import { logger } from "../utils/logger.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
-export type ToolOptions = Required<
-  Omit<
-    TaskOptions,
-    "taskId" | "maxIterations" | "respondOnFinalOnly" | "abortSignal"
-  >
->;
+export type ToolOptions = Required<Pick<TaskOptions, "callbackFunction">>;
 
 function createStderrMonitor(
   toolRequest: ToolRequest,
@@ -48,12 +43,7 @@ function createStderrMonitor(
 export async function callTools(
   toolManager: ToolManager,
   toolRequests: ToolRequest[],
-  options: Required<
-    Omit<
-      TaskOptions,
-      "taskId" | "maxIterations" | "respondOnFinalOnly" | "abortSignal"
-    >
-  >
+  options: ToolOptions
 ): Promise<ToolResponse[]> {
   if (toolRequests.length === 0) {
     return [];

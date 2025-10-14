@@ -12,14 +12,12 @@ import {
   SessionMessage,
   ConnectOptions,
 } from "@artinet/types";
-import { ToolManager } from "../tools/index.js";
-import { AgentManager } from "../agents/index.js";
 import { AgentCard } from "@artinet/sdk";
 import { connectv1 } from "../api/connect.js";
 import { safeParseJSON } from "../utils/parse.js";
-import { ApiProvider } from "../types/index.js";
+import { ApiProvider, IAgentManager, IToolManager } from "../types/index.js";
 import { v4 as uuidv4 } from "uuid";
-
+import { ISessionManager, SubSession } from "../types/session.js";
 export function parseResponse(response: ConnectResponse): string {
   return (
     safeParseJSON(response.agentResponse)?.data?.[0]?.generated_text ??
@@ -71,11 +69,8 @@ function addResults(
     },
   };
 }
-export interface SubSession {
-  taskId: string;
-  iterations: number;
-}
-export class SessionManager {
+
+export class SessionManager implements ISessionManager {
   private connectRequest: ConnectRequest;
   private api: ApiProvider;
   private abortSignal?: AbortSignal;
@@ -108,8 +103,8 @@ export class SessionManager {
   async initSession(
     toolIds: string[],
     agentIds: string[],
-    toolManager: ToolManager,
-    agentManager: AgentManager
+    toolManager: IToolManager,
+    agentManager: IAgentManager
   ): Promise<ConnectRequest> {
     if (this.initialized) {
       throw new Error("Session is already initialized");

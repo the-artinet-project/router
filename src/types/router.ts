@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { ConnectRequest, ConnectResponse } from "@artinet/types";
-
+import { ISessionManager } from "./session.js";
 export type ApiProvider = (
   connectRequest: ConnectRequest,
   abortSignal?: AbortSignal
@@ -21,6 +21,7 @@ export interface TaskOptions {
   maxIterations?: number;
   callbackFunction?: (...args: any[]) => void;
   abortSignal?: AbortSignal | undefined;
+  sessionManager?: ISessionManager;
 }
 
 export interface RouterParams {

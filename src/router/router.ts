@@ -21,6 +21,7 @@ import {
   RouterParams,
   ApiProvider,
   TaskOptions,
+  ISessionManager,
 } from "../types/index.js";
 import { AgentManager } from "../agents/index.js";
 import {
@@ -186,11 +187,11 @@ export class LocalRouter implements IRouter {
       params,
       this.defaultOptions
     );
-    const sessionManager = new SessionManager(
-      connectRequest,
-      api,
-      options.abortSignal
-    );
+
+    let sessionManager: ISessionManager =
+      options.sessionManager ??
+      new SessionManager(connectRequest, api, options.abortSignal);
+
     await sessionManager
       .initSession(
         tools ?? [],

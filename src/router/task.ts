@@ -11,18 +11,18 @@ import {
   AgentRequest,
   ToolRequest,
 } from "@artinet/types";
-import { TaskOptions } from "../types/index.js";
+import { ISessionManager, TaskOptions } from "../types/index.js";
 import { logger } from "../utils/logger.js";
 import { ToolManager } from "../tools/index.js";
 import { AgentManager } from "../agents/index.js";
-import { SessionManager } from "./session.js";
 import { callAgents } from "./call-agents.js";
 import { callTools } from "./call-tools.js";
 
 export const MAX_ITERATIONS = 10;
 
 function createTaskOptions(
-  taskOptions: TaskOptions = {}
+  taskOptions: TaskOptions = {},
+  sessionManager: ISessionManager
 ): Required<TaskOptions> {
   return {
     ...taskOptions,
@@ -30,10 +30,11 @@ function createTaskOptions(
     maxIterations: taskOptions.maxIterations ?? MAX_ITERATIONS,
     callbackFunction: taskOptions.callbackFunction ?? ((_) => {}),
     abortSignal: taskOptions.abortSignal ?? new AbortController().signal,
+    sessionManager: sessionManager,
   };
 }
 export async function executeTask(
-  sessionManager: SessionManager,
+  sessionManager: ISessionManager,
   toolManager: ToolManager,
   agentManager: AgentManager,
   taskOptions: TaskOptions = {}
@@ -41,7 +42,10 @@ export async function executeTask(
   if (!sessionManager.Initialized) {
     throw new Error("Session is not initialized");
   }
-  const fullTaskOptions: Required<TaskOptions> = createTaskOptions(taskOptions);
+  const fullTaskOptions: Required<TaskOptions> = createTaskOptions(
+    taskOptions,
+    sessionManager
+  );
 
   let requestCount = 0;
   let iteration = 0;

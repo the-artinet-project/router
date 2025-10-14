@@ -17,16 +17,16 @@ import { getContent } from "../utils/get-content.js";
 import { safeParse } from "../utils/parse.js";
 import { AgentManager } from "../agents/index.js";
 import pLimit from "p-limit";
-import { SubSession } from "./session.js";
+import { SubSession } from "../types/index.js";
+
+export type AgentOptions = Required<Pick<TaskOptions, "taskId">> & {
+  abortSignal?: AbortSignal | undefined;
+};
 
 export async function callAgent(
   agent: A2AServiceInterface,
   agentRequest: AgentRequest,
-  options: Required<
-    Omit<TaskOptions, "maxIterations" | "abortSignal" | "callbackFunction">
-  > & {
-    abortSignal?: AbortSignal | undefined;
-  }
+  options: AgentOptions
 ): Promise<AgentResponse | ToolResponse> {
   const { taskId, abortSignal } = options;
   const agentReply: Message | Task | undefined = await agent.sendMessage(
@@ -79,7 +79,7 @@ export async function callAgent(
 export async function callAgents(
   agentManager: AgentManager,
   agentRequests: AgentRequest[],
-  options: Required<Omit<TaskOptions, "maxIterations" | "abortSignal">> & {
+  options: Required<Pick<TaskOptions, "taskId" | "callbackFunction">> & {
     abortSignal?: AbortSignal | undefined;
   },
   subSessions?: Record<string, SubSession>
