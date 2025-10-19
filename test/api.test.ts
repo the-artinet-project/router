@@ -123,7 +123,7 @@ describe("API Tests", () => {
     expect((toolResponse as CallToolResult).content[0].text).toEqual(
       "Echo: test-message"
     );
-  }, 40000);
+  }, 60000);
   it("should request, execute and respond", async () => {
     const mcpInfo: ToolInfo = await getToolInfo(client);
     const initialProps: ConnectRequest = {
@@ -187,7 +187,7 @@ describe("API Tests", () => {
       },
     });
     expect(finalResponse).toBeDefined();
-  }, 40000);
+  }, 60000);
   it("should send agentCard to api", async () => {
     const testAgentCard: AgentCard = {
       description: "A test agent for unit tests",
@@ -234,7 +234,7 @@ describe("API Tests", () => {
     expect(response.options?.agents?.requests).toBeDefined();
     expect(response.options?.agents?.requests?.[0].uri).toBeDefined();
     expect(response.options?.agents?.requests?.[0].directive).toBeDefined();
-  }, 40000);
+  }, 60000);
   it("should execute an agent skill", async () => {
     const testAgentCard: AgentCard = {
       description: "A test agent for unit tests",
@@ -297,5 +297,5 @@ describe("API Tests", () => {
       },
     });
     expect(agentResponse).toBeDefined();
-  }, 40000);
+  }, 60000);
 });

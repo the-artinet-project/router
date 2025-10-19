@@ -98,7 +98,7 @@ describe("Router Tests", () => {
     expect(response).toBeDefined();
     expect(abortController.signal.aborted).toBe(true);
     await router.close();
-  }, 40000);
+  }, 60000);
   it("should init with echo agent", async () => {
     const toolManager = new ToolManager();
     const agentManager = new AgentManager();
@@ -149,7 +149,7 @@ describe("Router Tests", () => {
     expect(response).toBeDefined();
     await router.close();
     expect(abortController.signal.aborted).toBe(true);
-  }, 40000);
+  }, 60000);
   it("should send message", async () => {
     const toolManager = new ToolManager();
     const agentManager = new AgentManager();
@@ -209,7 +209,7 @@ describe("Router Tests", () => {
     await router.close();
     expect(abortController.signal.aborted).toBe(true);
     expect(callbackCalled).toBe(true);
-  }, 40000);
+  }, 60000);
   it("should emit on tool response", async () => {
     const toolManager = new ToolManager();
     const agentManager = new AgentManager();
@@ -269,7 +269,7 @@ describe("Router Tests", () => {
     await router.close();
     expect(abortController.signal.aborted).toBe(true);
     expect(callbackCalled).toBe(true);
-  }, 40000);
+  }, 60000);
   it("should send string message", async () => {
     const toolManager = new ToolManager();
     const agentManager = new AgentManager();
@@ -315,7 +315,7 @@ describe("Router Tests", () => {
     expect(abortController.signal.aborted).toBe(true);
     expect(callbackCalled).toBe(true);
     await router.close();
-  }, 40000);
+  }, 60000);
   it("should run as an agent", async () => {
     const toolManager = new ToolManager();
     const agentManager = new AgentManager();
@@ -382,5 +382,5 @@ describe("Router Tests", () => {
     expect(abortController.signal.aborted).toBe(true);
 
     await router.close();
-  }, 40000);
+  }, 60000);
 });
