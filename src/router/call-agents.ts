@@ -4,7 +4,7 @@
  */
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import { A2AServiceInterface, Message, Task } from "@artinet/sdk";
+import { A2AServiceInterface, Message, Task, getContent } from "@artinet/sdk";
 import {
   AgentResponse,
   ToolResponse,
@@ -13,7 +13,6 @@ import {
 } from "@artinet/types";
 import { TaskOptions } from "../types/index.js";
 import { logger } from "../utils/logger.js";
-import { getContent } from "../utils/get-content.js";
 import { safeParse } from "../utils/parse.js";
 import { AgentManager } from "../agents/index.js";
 import pLimit from "p-limit";

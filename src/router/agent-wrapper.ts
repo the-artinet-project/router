@@ -10,7 +10,6 @@ import {
   createAgent,
   FactoryParams as CreateAgentParams,
 } from "@artinet/sdk";
-import { getContent } from "../utils/get-content.js";
 import { LocalRouter } from "./router.js";
 
 export const defaultAgentCard: AgentCard = {
@@ -47,19 +46,19 @@ export function wrapRouter(
   return createAgent({
     ...params,
     engine: AgentBuilder()
-      .text(async ({ command }) => {
+      .text(async ({ content }) => {
         return await router.connect({
           message: {
             session: {
               messages: [
                 { role: "system", content: instructions },
-                { role: "user", content: getContent(command.message) ?? "" },
+                { role: "user", content: content ?? "" },
               ],
             },
           },
           tools: params?.tools ?? router.tools.getToolNames(),
           agents: (params?.agents ?? router.agents.getAgentIds()).filter(
-            (agent) => agent !== card.name
+            (agent) => agent !== card.name //ensure the agent doesn't call itself
           ),
         });
       })

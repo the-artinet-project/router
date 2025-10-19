@@ -99,7 +99,7 @@ export class SessionManager implements ISessionManager {
     return this.subSessions;
   }
   //maintain async so that we can eventually lazily initialize the session (tools/agents)
-  //at which point well use promises to retrieve the tools/agents
+  //at which point well use promises to retrieve the tools/agents when they are needed
   async initSession(
     toolIds: string[],
     agentIds: string[],

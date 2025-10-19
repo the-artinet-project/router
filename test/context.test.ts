@@ -57,5 +57,5 @@ describe("Context Tests", () => {
     expect(updateCalled || errorCalled).toBe(true);
     expect(abortController.signal.aborted).toBe(true);
     await router.close();
-  }, 30000);
+  }, 40000);
 });

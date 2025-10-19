@@ -33,7 +33,6 @@ function createStderrMonitor(
         content: [{ type: "text", text: data.toString() }],
       },
     });
-    logger.warn("callTools: stderr: ", data.toString());
   };
 }
 /**
