@@ -69,7 +69,7 @@ function addResults(
     },
   };
 }
-
+//todo make serializable
 export class SessionManager implements ISessionManager {
   private connectRequest: ConnectRequest;
   private api: ApiProvider;

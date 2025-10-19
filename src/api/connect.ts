@@ -7,7 +7,7 @@ import {
   ConnectResponse,
   ConnectResponseSchema,
 } from "@artinet/types";
-import { safeParse } from "../utils/parse.js";
+import { safeParse, safeParseJSON } from "../utils/parse.js";
 import { logger } from "../utils/logger.js";
 
 export async function connectv1(
@@ -34,18 +34,26 @@ export async function connectv1(
     );
     // logger.log("connectv1: ", "restResponse: ", restResponse);
     if (!restResponse.ok) {
+      const text = await restResponse.text();
       throw new Error(
         "Failed to fetch agent response: " +
           restResponse.statusText +
           " " +
           restResponse.status +
           " " +
-          (JSON.stringify(await restResponse.json()) ?? "")
+          (text ?? "")
       );
     }
-
-    const responseJson = await restResponse.json();
-    return safeParse(responseJson.body, ConnectResponseSchema).data; //todo use TRPC
+    const text = await restResponse.text();
+    const json = safeParseJSON(text).data ?? {};
+    return (
+      safeParse(json?.body, ConnectResponseSchema).data ?? {
+        agentResponse: text,
+        timestamp: new Date().toISOString(),
+        error: "Failed to parse response",
+        options: {},
+      }
+    );
   } catch (error: any) {
     logger.error("connectv1: ", "Error connecting to api:", error);
     return {

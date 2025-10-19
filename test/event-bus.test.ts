@@ -1,6 +1,5 @@
 import { jest, describe, it, expect } from "@jest/globals";
 import { ConnectRequest } from "@artinet/types";
-// import { AgentCard } from "@artinet/sdk";
 import { LocalRouter, ToolManager, AgentManager } from "../src/index.js";
 import { EventBus } from "../src/utils/event-bus.js";
 
