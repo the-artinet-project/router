@@ -8,6 +8,7 @@ output.txt
 artinet-router-*.tgz
 scripts
 test/demo.ts
+test/demo-relay.ts
 test/bundle.test.ts
 artinet.log
 package-publish.json

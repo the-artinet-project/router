@@ -3,45 +3,43 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { v4 as uuidv4 } from "uuid";
-import { z } from "zod";
-import { A2AServiceInterface, Message, Task, getContent } from "@artinet/sdk";
-import {
-  AgentResponse,
-  ToolResponse,
-  AgentRequest,
-  ToolResponseSchema,
-} from "@artinet/types";
+import { AgentType } from "@artinet/agent-relay";
+import { A2AClient, SendMessageSuccessResult, getContent } from "@artinet/sdk";
+import { AgentResponse, ToolResponse, AgentRequest } from "@artinet/types";
 import { TaskOptions } from "../types/index.js";
 import { logger } from "../utils/logger.js";
-import { safeParse } from "../utils/parse.js";
 import { AgentManager } from "../agents/index.js";
 import pLimit from "p-limit";
 import { SubSession } from "../types/index.js";
 
 export type AgentOptions = Required<Pick<TaskOptions, "taskId">> & {
   abortSignal?: AbortSignal | undefined;
+  referenceTaskIds?: string[];
 };
 
 export async function callAgent(
-  agent: A2AServiceInterface,
+  agent: AgentType,
   agentRequest: AgentRequest,
   options: AgentOptions
 ): Promise<AgentResponse | ToolResponse> {
-  const { taskId, abortSignal } = options;
-  const agentReply: Message | Task | undefined = await agent.sendMessage(
+  const { taskId, abortSignal, referenceTaskIds } = options;
+  const agentReply: SendMessageSuccessResult | null = await agent.sendMessage(
     {
       message: {
         kind: "message",
         role: "user",
         messageId: uuidv4(),
         taskId: taskId,
+        referenceTaskIds: referenceTaskIds,
         contextId: uuidv4(),
         parts: [{ kind: "text", text: agentRequest.directive }],
       },
     },
-    {
-      signal: abortSignal,
-    }
+    agent instanceof A2AClient
+      ? undefined
+      : {
+          signal: abortSignal,
+        }
   );
 
   if (!agentReply) {
@@ -49,26 +47,19 @@ export async function callAgent(
   }
 
   const content = getContent(agentReply) ?? "";
-  //we'll keep this for now but we shouldn't recieve a tool response as a final response from an agent
-  if (content.includes("tool_response")) {
-    const parseResult: z.SafeParseReturnType<ToolResponse, ToolResponse> =
-      safeParse(content, ToolResponseSchema);
-    if (parseResult.success) {
-      const mcpArgs: ToolResponse = parseResult.data;
-      mcpArgs.name = `📨 ${agentRequest.uri} 🔧 ${mcpArgs.name}`; //indicator that this is subagent calling the tool
-      return mcpArgs;
-    }
-  } else if (content !== "" && content !== "{}" && content !== "[]") {
-    const callAgentResponse: AgentResponse = {
-      kind: "agent_response",
-      uri: agentRequest.uri,
-      directive: agentRequest.directive,
-      result: content,
-      id: agentRequest.id ?? taskId,
-    };
-    return callAgentResponse;
+
+  if (content === "" || content === "{}" || content === "[]") {
+    throw new Error("no content detected");
   }
-  throw new Error("no content detected");
+
+  const callAgentResponse: AgentResponse = {
+    kind: "agent_response",
+    uri: agentRequest.uri,
+    directive: agentRequest.directive,
+    result: content,
+    id: agentRequest.id ?? taskId,
+  };
+  return callAgentResponse;
 }
 
 /**
@@ -104,6 +95,7 @@ export async function callAgents(
             ...options,
             //each agent-call should have a unique taskId to avoid conflicts
             taskId: subSessions?.[agentRequest.uri]?.taskId ?? uuidv4(),
+            referenceTaskIds: [parentTaskId],
           }).catch((error) => {
             logger.error(
               `error calling agent[agent:${agentRequest.uri}][parent-task:${parentTaskId}]: `,

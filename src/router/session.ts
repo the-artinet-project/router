@@ -12,16 +12,17 @@ import {
   SessionMessage,
   ConnectOptions,
 } from "@artinet/types";
+import { getAgentCard } from "@artinet/agent-relay";
 import { AgentCard } from "@artinet/sdk";
 import { connectv1 } from "../api/connect.js";
 import { safeParseJSON } from "../utils/parse.js";
-import { ApiProvider, IAgentManager, IToolManager } from "../types/index.js";
+import { ApiProvider, IToolManager, IAgentManager } from "../types/index.js";
 import { v4 as uuidv4 } from "uuid";
 import { ISessionManager, SubSession } from "../types/session.js";
 export function parseResponse(response: ConnectResponse): string {
   return (
     safeParseJSON(response.agentResponse)?.data?.[0]?.generated_text ??
-    `failed to parse response: ${
+    `router:failed to parse response: ${
       response.agentResponse ?? response.systemMessage ?? response.error
     }`
   ).trim();
@@ -118,7 +119,13 @@ export class SessionManager implements ISessionManager {
 
     const localAgents: AgentCard[] = (
       await Promise.all(
-        agentIds.map(async (id) => await agentManager.getAgent(id)?.agentCard)
+        agentIds.map(async (id) => {
+          const agent = agentManager.getAgent(id);
+          if (!agent) {
+            return undefined;
+          }
+          return await getAgentCard(agent);
+        })
       )
     ).filter((agent): agent is AgentCard => agent !== undefined);
 

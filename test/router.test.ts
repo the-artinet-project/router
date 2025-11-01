@@ -1,6 +1,6 @@
 import { jest, describe, it, expect } from "@jest/globals";
 import { ConnectRequest } from "@artinet/types";
-import { AgentCard } from "@artinet/sdk";
+import { AgentCard, createAgentServer, createAgent } from "@artinet/sdk";
 import { echoAgentEngine } from "./agents/echo-agent.js";
 import {
   LocalRouter,
@@ -382,5 +382,47 @@ describe("Router Tests", () => {
     expect(abortController.signal.aborted).toBe(true);
 
     await router.close();
+  }, 60000);
+  it("should detect and call an agent server", async () => {
+    const agentServer = createAgentServer({
+      agent: createAgent({
+        engine: echoAgentEngine,
+        agentCard: {
+          ...testAgentCard,
+        },
+      }),
+      agentCardPath: "/.well-known/agent-card.json",
+    });
+    const server = agentServer.app.listen(3001, () => {});
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const abortController = new AbortController();
+    const router = await LocalRouter.createRouter(
+      undefined,
+      undefined,
+      new ToolManager(),
+      new AgentManager(),
+      {
+        abortSignal: abortController.signal,
+      }
+    );
+    router.on("update", (_) => {
+      abortController.abort();
+    });
+    const response = await router
+      .connect({
+        message: "Call the test-agent and make sure it responds",
+        options: {
+          abortSignal: abortController.signal,
+        },
+        agents: ["test-agent"],
+      })
+      .catch((error) => {
+        console.log("error: ", error);
+      });
+    expect(response).toBeDefined();
+    expect(abortController.signal.aborted).toBe(true);
+    await router.close();
+    await server.close();
+    await agentServer.agent.stop();
   }, 60000);
 });

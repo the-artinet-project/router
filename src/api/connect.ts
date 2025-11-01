@@ -50,7 +50,7 @@ export async function connectv1(
       safeParse(json?.body, ConnectResponseSchema).data ?? {
         agentResponse: text,
         timestamp: new Date().toISOString(),
-        error: "Failed to parse response",
+        error: "connectv1: failed to parse response: " + text,
         options: {},
       }
     );

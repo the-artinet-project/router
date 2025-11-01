@@ -13,8 +13,11 @@ import {
   Update,
   AgentSkill,
   AgentCard,
+  A2AClient,
 } from "@artinet/sdk";
 import { AgentResponse, ToolResponse, ConnectRequest } from "@artinet/types";
+import { ClientConfig, scanAgents, ScanConfig } from "@artinet/agent-relay";
+
 import {
   IRouter,
   InitializedTool,
@@ -38,7 +41,7 @@ import { wrapRouter } from "./agent-wrapper.js";
 export const defaultConnectRequest: ConnectRequest = {
   identifier: "deepseek-ai/DeepSeek-R1",
   session: { messages: [] },
-  preferredEndpoint: "hf-inference",
+  preferredEndpoint: "open-router",
   options: { isAuthRequired: false },
 };
 
@@ -103,7 +106,7 @@ export class LocalRouter implements IRouter {
    * @returns The created router.
    */
   static async createRouter(
-    servers: {
+    servers?: {
       mcpServers: {
         stdioServers: StdioServerParameters[];
       };
@@ -111,16 +114,20 @@ export class LocalRouter implements IRouter {
     contexts: EventBus = new EventBus(),
     tools: ToolManager = new ToolManager(),
     agents: AgentManager = new AgentManager(),
-    defaultOptions: TaskOptions = {}
+    defaultOptions: TaskOptions = {},
+    scanConfig?: ScanConfig
   ): Promise<LocalRouter> {
     const router = new LocalRouter(contexts, tools, agents, defaultOptions);
-    await Promise.all(
-      servers.mcpServers.stdioServers.map(async (server) => {
-        await router.createTool(server).catch((error) => {
-          logger.error("error creating tool: ", error);
-        });
-      })
-    );
+    await router.findAgents(scanConfig);
+    if (servers) {
+      await Promise.all(
+        servers.mcpServers.stdioServers.map(async (server) => {
+          await router.createTool(server).catch((error) => {
+            logger.error("error creating tool: ", error);
+          });
+        })
+      );
+    }
     return router;
   }
 
@@ -229,6 +236,38 @@ export class LocalRouter implements IRouter {
     await this.removeAllListeners();
   }
 
+  /**
+   * @description Scans for agents on the network and adds them to the agent manager.
+   * @param scanConfig - The scan configuration.
+   * @returns The found agents.
+   */
+  async findAgents(scanConfig?: ScanConfig): Promise<void> {
+    const clientConfigs: ClientConfig[] = await scanAgents({
+      ...scanConfig,
+      host: scanConfig?.host ?? "localhost",
+      startPort: scanConfig?.startPort ?? 3000,
+      endPort: scanConfig?.endPort ?? 3100,
+      threads: scanConfig?.threads ?? 10,
+      fallbackPath: scanConfig?.fallbackPath ?? "/.well-known/agent-card.json",
+    }).catch((error) => {
+      logger.error(`Error scanning agents: ${error}`);
+      return [];
+    });
+    await Promise.all(
+      clientConfigs.map(async (config) => {
+        try {
+          const agent = new A2AClient(
+            config.url,
+            config.headers,
+            config.fallbackPath
+          );
+          await this.agentManager.setAgent(agent);
+        } catch (error) {
+          logger.error(`Error creating agent: ${error}`);
+        }
+      })
+    );
+  }
   /**
    * @description Creates and Attaches an Agent to the router.
    */

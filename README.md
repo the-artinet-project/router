@@ -12,7 +12,7 @@ A tool for routing messages between A2A enabled AI agents and marshalling MCP to
 
 https://github.com/user-attachments/assets/b952b0f7-550a-44a3-b882-2bb3345be0b1
 
-**Breaking Changes in v0.0.8**
+**Breaking Changes since v0.0.8**
 
 - `callbackFunction` has been removed from `router.connect` infavor of event emissions ([see below](#router-with-agents)).
 - Sub-agent calls now use their own unique `taskId`s to prevent task overlap.
@@ -23,8 +23,10 @@ https://github.com/user-attachments/assets/b952b0f7-550a-44a3-b882-2bb3345be0b1
 ## Features
 
 - **Agent Management**: Route messages between multiple AI agents
+- **Dynamic Discovery**: Automatically detects local A2A servers
 - **Tool Integration**: MCP tool integration with concurrent execution
 - **Session Management**: Persistent sessions with message history
+- **Task Handoff**: Supports context chaining by using A2A `referenceTasks`
 - **Coming Soon**: A guide to create your own custom router using the IRouter interface
 
 ## Installation
@@ -57,13 +59,13 @@ const result = await router.connect({
 
 ### Router with Agents
 
+**Create an agent and define its behavior:**
+
 ```typescript
 import { LocalRouter } from "@artinet/router";
 import { AgentBuilder, FileStore, getPayload } from "@artinet/sdk";
 
 const router = new LocalRouter();
-
-// Create an agent and define its behavior
 router.createAgent({
   engine: AgentBuilder()
     .text(({ command }) => {
@@ -77,13 +79,19 @@ router.createAgent({
   },
   tasks: new FileStore("my_dir"), // Save sessions to disk (must be a valid directory)
 });
+```
 
-// Subscribe to updates like the results of tool/agent calls
+**Subscribe to updates like the results of tool/agent calls:**
+
+```typescript
 router.on("update", (response: any[]) => {
   console.log(response);
 });
+```
 
-// Call the agent via a prompt
+**Call the agent via a prompt:**
+
+```typescript
 const result: string = await router.connect({
   message: {
     identifier: "deepseek-ai/DeepSeek-R1", // Find a valid model identifier @ artinet.io; Defaults to DeepSeek-R1
@@ -92,7 +100,7 @@ const result: string = await router.connect({
         { role: "user", content: "Use the echo agent to reply to me" },
       ],
     },
-    preferredEndpoint: "hf-inference",
+    preferredEndpoint: "open-router",
     options: { isAuthRequired: false },
   },
   agents: ["EchoAgent"], // Provide a list of allowed agents
@@ -169,24 +177,6 @@ Each `ConnectRequest` will include:
 Ensure that you include an array of `ToolRequest`s and/or `AgentRequest`s in your `ConnectResponse`. This will trigger the router to invoke those tools/agents
 
 ```typescript
-import { LocalRouter } from "@artinet/router";
-import { AgentBuilder, FileStore } from "@artinet/sdk";
-
-// Create a router with tools
-const router = await LocalRouter.createRouter({
-  mcpServers: {
-    stdioServers: [
-      {
-        command: "npx",
-        args: [
-          "-y",
-          "@modelcontextprotocol/server-filesystem",
-          "/path/to/allowed/files",
-        ],
-      },
-    ],
-  },
-});
 
 // Plug-in your own API function by converting tool/agents Calls into a format that the router will understand
 const response = await router.connect({
