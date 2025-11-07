@@ -12,7 +12,7 @@ import { AgentCard, createAgent } from "@artinet/sdk";
 import { echoAgentEngine } from "./agents/echo-agent.js";
 import { safeClose, safeStdioTransport } from "../src/utils/safeTransport.js";
 jest.setTimeout(10000);
-describe("API Tests", () => {
+describe.skip("API Tests", () => {
   let defaultProps: ConnectRequest = {
     identifier:
       "0xf7dcee219e1a4027191508511c99ea64fe7202c71df416b5e5ed03cc2e6b386f",

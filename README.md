@@ -22,12 +22,11 @@ https://github.com/user-attachments/assets/b952b0f7-550a-44a3-b882-2bb3345be0b1
 
 ## Features
 
-- **Agent Management**: Route messages between multiple AI agents
-- **Dynamic Discovery**: Automatically detects local A2A servers
+- **Dynamic Dispatch**: Route messages between multiple AI agents
+- **Automatic Discovery**: Automatically detects local A2A servers
 - **Tool Integration**: MCP tool integration with concurrent execution
 - **Session Management**: Persistent sessions with message history
 - **Task Handoff**: Supports context chaining by using A2A `referenceTasks`
-- **Coming Soon**: A guide to create your own custom router using the IRouter interface
 
 ## Installation
 
@@ -68,17 +67,25 @@ import { AgentBuilder, FileStore, getPayload } from "@artinet/sdk";
 const router = new LocalRouter();
 router.createAgent({
   engine: AgentBuilder()
-    .text(({ command }) => {
-      return getPayload(command.message).text;
+    .text(({ content: userInput }) => {
+      return userInput;
     })
     .createAgentEngine(),
-  agentCard: { //must be a valid agent card
+  agentCard: {
     name: "EchoAgent",
     description: "Echos back every request exactly",
     ...
   },
-  tasks: new FileStore("my_dir"), // Save sessions to disk (must be a valid directory)
 });
+
+//The router will dynamically orchestrate the agents & tools
+const result: string = await router.connect({
+  message: "Use the echo agent to reply to me",
+  agents: ["EchoAgent"], // Provide a list of allowed agents
+  taskId: "task123", // Pass a taskId to resume a saved agent session
+});
+
+await router.close();
 ```
 
 **Subscribe to updates like the results of tool/agent calls:**
@@ -87,27 +94,6 @@ router.createAgent({
 router.on("update", (response: any[]) => {
   console.log(response);
 });
-```
-
-**Call the agent via a prompt:**
-
-```typescript
-const result: string = await router.connect({
-  message: {
-    identifier: "deepseek-ai/DeepSeek-R1", // Find a valid model identifier @ artinet.io; Defaults to DeepSeek-R1
-    session: {
-      messages: [
-        { role: "user", content: "Use the echo agent to reply to me" },
-      ],
-    },
-    preferredEndpoint: "open-router",
-    options: { isAuthRequired: false },
-  },
-  agents: ["EchoAgent"], // Provide a list of allowed agents
-  taskId: "task123", // Pass a taskId to resume a saved agent session
-});
-
-await router.close();
 ```
 
 ### Router as Agent
@@ -178,7 +164,7 @@ Ensure that you include an array of `ToolRequest`s and/or `AgentRequest`s in you
 
 ```typescript
 
-// Plug-in your own API function by converting tool/agents Calls into a format that the router will understand
+// Plug-in your own API function by converting tool/agent Calls into a format that the router will understand
 const response = await router.connect({
   message: {
     session: { messages: [{ role: "user", content: "Hello!" }] },
@@ -206,10 +192,10 @@ const response = await router.connect({
                 callToolRequest: {
                   method: "tools/call",
                   params: {
-                    name: "hello-function",
+                    name: "say-hello",
                   },
                 },
-                id: "test-tool-id",
+                id: "hello-tool",
               },
             ],
           },
@@ -229,7 +215,7 @@ const response = await router.connect({
       return response;
     },
   },
-  tools: ["hello-function"],
+  tools: ["hello-tool"],
   agents: ["HelloAgent"],
 });
 ```

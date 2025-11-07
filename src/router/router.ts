@@ -319,6 +319,7 @@ export class LocalRouter implements IRouter {
     > & {
       tools?: string[];
       agents?: string[];
+      apiProvider?: ApiProvider;
     }
   ): Agent {
     return wrapRouter(instructions, card, this, params);

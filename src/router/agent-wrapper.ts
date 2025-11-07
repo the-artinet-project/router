@@ -9,11 +9,9 @@ import {
   AgentSkill,
   createAgent,
   FactoryParams as CreateAgentParams,
-  Message,
-  Task,
-  getContent,
 } from "@artinet/sdk";
-import { SessionMessage } from "@artinet/types";
+import { ApiProvider } from "../types/index.js";
+import { getHistory } from "../utils/history.js";
 import { LocalRouter } from "./router.js";
 
 export const defaultAgentCard: AgentCard = {
@@ -31,33 +29,7 @@ export const defaultAgentCard: AgentCard = {
   defaultOutputModes: [],
   skills: [],
 };
-function getHistory(task: Task): SessionMessage[] {
-  if (!task) return [];
-  let communicationHistory: SessionMessage[] =
-    task.history?.map((message: Message) => {
-      return {
-        role: message.role,
-        content: getContent(message) ?? "",
-      };
-    }) ?? [];
-  if (!task.metadata?.referencedTasks) return communicationHistory;
-  communicationHistory = [
-    ...communicationHistory,
-    ...(task.metadata?.referencedTasks as Task[])
-      ?.flatMap((referencedTask: Task) => {
-        const sessionMessages: SessionMessage[] =
-          referencedTask.history?.map((message: Message) => {
-            return {
-              role: message.role,
-              content: getContent(message) ?? "",
-            };
-          }) ?? [];
-        return sessionMessages;
-      })
-      .filter((message: SessionMessage) => message !== undefined),
-    ];
-  return communicationHistory;
-}
+
 export function wrapRouter(
   instructions: string,
   card: Partial<AgentCard> & {
@@ -71,6 +43,7 @@ export function wrapRouter(
   > & {
     tools?: string[];
     agents?: string[];
+    apiProvider?: ApiProvider;
   }
 ): Agent {
   return createAgent({
@@ -81,11 +54,12 @@ export function wrapRouter(
           message: {
             session: {
               messages: [
-                ...getHistory(context.State().task),
                 { role: "system", content: instructions },
+                ...getHistory(context.State().task),
                 { role: "user", content: content ?? "" },
               ],
             },
+            apiProvider: params?.apiProvider,
           },
           tools: params?.tools ?? router.tools.getToolNames(),
           agents: (params?.agents ?? router.agents.getAgentIds()).filter(

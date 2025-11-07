@@ -1,8 +1,9 @@
-import { jest, describe, it, expect } from "@jest/globals";
+import { describe, it, expect } from "@jest/globals";
 import { LocalRouter } from "../src/index.js";
 import { echoAgentEngine } from "./agents/echo-agent.js";
 import { testAgentCard } from "./agents/echo-agent.js";
-jest.setTimeout(10000);
+import { createMockProvider } from "./utils.js";
+
 describe("Context Tests", () => {
   it("should emit updates", async () => {
     const router = new LocalRouter();
@@ -22,7 +23,27 @@ describe("Context Tests", () => {
       abortController.abort();
     });
     const response = await router.connect({
-      message: "test-message",
+      message: {
+        session: {
+          messages: [
+            {
+              role: "user",
+              content: "test-message",
+            },
+          ],
+        },
+        apiProvider: createMockProvider(
+          "calling test-agent",
+          [],
+          [
+            {
+              kind: "agent_request",
+              uri: "test-agent",
+              directive: "test-directive",
+            },
+          ]
+        ),
+      },
       agents: ["test-agent"],
       options: {
         abortSignal: abortController.signal,

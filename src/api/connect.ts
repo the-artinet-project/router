@@ -66,7 +66,7 @@ export async function connectv1(
         ],
         null,
         2
-      ), //`Client error: Unfortunately, this agent is currently experiencing issues. Please try again later.`,
+      ),
       timestamp: new Date().toISOString(),
       error: error,
       options: {},

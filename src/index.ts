@@ -11,4 +11,5 @@ export * from "./utils/logger.js";
 export * from "./utils/parse.js";
 export * from "./utils/event-bus.js";
 export * from "./utils/safeTransport.js";
+export * from "./utils/history.js";
 export * from "./router/index.js";

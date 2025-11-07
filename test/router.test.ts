@@ -9,7 +9,60 @@ import {
   RouterRequest,
 } from "../src/index.js";
 import { EventBus } from "../src/utils/event-bus.js";
+import { createMockProvider } from "./utils.js";
 
+const testToolsProvider = createMockProvider("calling tools & agents", [
+  {
+    kind: "tool_request",
+    callToolRequest: {
+      method: "tools/call",
+      params: {
+        name: "echo",
+        arguments: {
+          message: "test-message",
+        },
+      },
+    },
+    id: "example-servers/everything",
+  },
+]);
+
+const testAgentsProvider = createMockProvider(
+  "calling agents",
+  [],
+  [
+    {
+      kind: "agent_request",
+      uri: "test-agent",
+      directive: "echo the input",
+    },
+  ]
+);
+const testBothProvider = createMockProvider(
+  "calling tools & agents",
+  [
+    {
+      kind: "tool_request",
+      callToolRequest: {
+        method: "tools/call",
+        params: {
+          name: "echo",
+          arguments: {
+            message: "test-message",
+          },
+        },
+      },
+      id: "example-servers/everything",
+    },
+  ],
+  [
+    {
+      kind: "agent_request",
+      uri: "test-agent",
+      directive: "echo the input",
+    },
+  ]
+);
 describe("Router Tests", () => {
   jest.setTimeout(10000);
   let defaultProps: ConnectRequest = {
@@ -88,7 +141,10 @@ describe("Router Tests", () => {
       abortController.abort();
     });
     const response = await router.connect({
-      message: defaultProps,
+      message: {
+        ...defaultProps,
+        apiProvider: testBothProvider,
+      },
       tools: ["example-servers/everything"],
       agents: ["test-agent"],
       options: {
@@ -139,6 +195,7 @@ describe("Router Tests", () => {
             { role: "user", content: "You are a test agent. Echo the input" },
           ],
         },
+        apiProvider: testBothProvider,
       },
       tools: ["example-servers/everything"],
       agents: ["test-agent"],
@@ -195,7 +252,10 @@ describe("Router Tests", () => {
     });
     const response = await router
       .connect({
-        message: routerRequest,
+        message: {
+          ...routerRequest,
+          apiProvider: testBothProvider,
+        },
         tools: ["example-servers/everything"],
         agents: ["test-agent"],
         options: {
@@ -255,7 +315,10 @@ describe("Router Tests", () => {
     });
     const response = await router
       .connect({
-        message: routerRequest,
+        message: {
+          ...routerRequest,
+          apiProvider: testToolsProvider,
+        },
         tools: ["example-servers/everything"],
         // agents: ["test-agent"],
         options: {
@@ -301,7 +364,14 @@ describe("Router Tests", () => {
     });
     const response = await router
       .connect({
-        message: "You are a test agent. Echo the input",
+        message: {
+          session: {
+            messages: [
+              { role: "user", content: "You are a test agent. Echo the input" },
+            ],
+          },
+          apiProvider: testBothProvider,
+        },
         tools: ["example-servers/everything"],
         agents: ["test-agent"],
         options: {
@@ -368,6 +438,7 @@ describe("Router Tests", () => {
       {
         tools: ["example-servers/everything"],
         agents: ["test-agent"],
+        apiProvider: testBothProvider,
       }
     );
     const response = await agent.sendMessage({
@@ -410,7 +481,17 @@ describe("Router Tests", () => {
     });
     const response = await router
       .connect({
-        message: "Call the test-agent and make sure it responds",
+        message: {
+          session: {
+            messages: [
+              {
+                role: "user",
+                content: "Call the test-agent and make sure it responds",
+              },
+            ],
+          },
+          apiProvider: testAgentsProvider,
+        },
         options: {
           abortSignal: abortController.signal,
         },

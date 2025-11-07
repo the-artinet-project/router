@@ -4,7 +4,7 @@
  */
 import { v4 as uuidv4 } from "uuid";
 import { AgentType } from "@artinet/agent-relay";
-import { A2AClient, SendMessageSuccessResult, getContent } from "@artinet/sdk";
+import { SendMessageSuccessResult, getContent } from "@artinet/sdk";
 import { AgentResponse, ToolResponse, AgentRequest } from "@artinet/types";
 import { TaskOptions } from "../types/index.js";
 import { logger } from "../utils/logger.js";
@@ -35,11 +35,9 @@ export async function callAgent(
         parts: [{ kind: "text", text: agentRequest.directive }],
       },
     },
-    agent instanceof A2AClient
-      ? undefined
-      : {
-          signal: abortSignal,
-        }
+    {
+      signal: abortSignal,
+    }
   );
 
   if (!agentReply) {

@@ -14,7 +14,35 @@ import { Implementation } from "@modelcontextprotocol/sdk/types.js";
 import { safeStdioTransport } from "../src/utils/safeTransport.js";
 import { echoAgentEngine, testAgentCard } from "./agents/echo-agent.js";
 import { createAgent } from "@artinet/sdk";
+import { createMockProvider } from "./utils.js";
 jest.setTimeout(10000);
+
+const testBothProvider = createMockProvider(
+  "calling tools & agents",
+  [
+    {
+      kind: "tool_request",
+      callToolRequest: {
+        method: "tools/call",
+        params: {
+          name: "echo",
+          arguments: {
+            message: "test-message",
+          },
+        },
+      },
+      id: "test-tool",
+    },
+  ],
+  [
+    {
+      kind: "agent_request",
+      uri: "test-agent",
+      directive: "echo the input",
+    },
+  ]
+);
+
 describe("Session Tests", () => {
   let request: ConnectRequest = {
     identifier:
@@ -129,10 +157,15 @@ describe("Session Tests", () => {
       new AgentManager()
     );
     expect(newRequest).toBeDefined();
-    const response = await sessionManager.sendMessage({
-      role: "user",
-      content: "this is a test message",
-    });
+    const response = await sessionManager.sendMessage(
+      {
+        role: "user",
+        content: "this is a test message",
+      },
+      undefined,
+      undefined,
+      testBothProvider
+    );
     expect(response).toBeDefined();
     expect(response.agentResponse).toBeDefined();
     const parsedResponse = parseResponse(response);
