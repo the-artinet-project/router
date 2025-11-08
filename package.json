@@ -1,5 +1,5 @@
 {
-  "version": "0.0.16",
+  "version": "0.0.17",
   "name": "@artinet/router",
   "description": "A tool for orchestrating A2A enabled AI agents that can call MCP servers.",
   "author": "artinet",
@@ -58,8 +58,8 @@
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
   },
   "dependencies": {
-    "@artinet/sdk": "^0.5.13",
-    "@artinet/agent-relay": "^0.0.3",
+    "@artinet/sdk": "^0.5.14",
+    "@artinet/agent-relay": "^0.0.4",
     "@artinet/types": "^0.0.5",
     "@modelcontextprotocol/sdk": "1.20.1",
     "p-limit": "^7.1.1",

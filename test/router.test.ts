@@ -114,7 +114,7 @@ describe("Router Tests", () => {
     ],
   };
 
-  it.skip("should init router", async () => {
+  it("should init router", async () => {
     const agentManager = new AgentManager();
     const toolManager = new ToolManager();
     const abortController = new AbortController();
@@ -460,6 +460,7 @@ describe("Router Tests", () => {
         engine: echoAgentEngine,
         agentCard: {
           ...testAgentCard,
+          url: "http://localhost:3001",
         },
       }),
       agentCardPath: "/.well-known/agent-card.json",
