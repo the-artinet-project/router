@@ -1,5 +1,5 @@
 {
-  "version": "0.0.19",
+  "version": "0.0.19-b",
   "name": "@artinet/router",
   "description": "A library for orchestrating A2A enabled AI agents that can call MCP servers.",
   "author": "artinet",
