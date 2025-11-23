@@ -1,23 +1,20 @@
 {
   "version": "0.0.18",
   "name": "@artinet/router",
-  "description": "A tool for orchestrating A2A enabled AI agents that can call MCP servers.",
+  "description": "A library for orchestrating A2A enabled AI agents that can call MCP servers.",
   "author": "artinet",
   "homepage": "https://artinet.io",
   "license": "Apache-2.0",
   "keywords": [
     "artinet",
     "orchestrator",
-    "orchestration",
     "agent",
     "a2a",
     "agent2agent",
     "ai",
-    "agentic",
-    "ai agent",
     "artificial intelligence",
-    "agentic ai",
-    "routing"
+    "mcp",
+    "modelcontextprotocol"
   ],
   "files": [
     "dist",

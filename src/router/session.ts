@@ -165,13 +165,18 @@ export class SessionManager implements ISessionManager {
       toolResults,
       agentResults
     );
-
-    const response: ConnectResponse = await (apiProvider ?? this.api)(
+    const provider: ApiProvider = apiProvider ?? this.api;
+    const response: ConnectResponse = await provider(
       this.connectRequest,
       this.abortSignal
     );
-    //todo delete this (artinet specific)
-    this.responseText = parseResponse(response);
+
+    // removing artinet specific parsing for custom providers
+    this.responseText =
+      provider === connectv1
+        ? parseResponse(response)
+        : response.agentResponse.trim() ?? "";
+
     this.connectRequest.session = updateSession(this.connectRequest.session, {
       role: "agent",
       content: this.responseText,

@@ -6,19 +6,13 @@
 [![GitHub stars](https://img.shields.io/github/stars/the-artinet-project/router?style=social)](https://github.com/the-artinet-project/router/stargazers)
 [![Discord](https://dcbadge.limes.pink/api/server/DaxzSchmmX?style=flat)](https://discord.gg/DaxzSchmmX)
 
-# @artinet/router
+# @artinet/orchestrator
 
-A tool for routing messages between A2A enabled AI agents and marshalling MCP tool servers.
+A (dynamic orchestration library)[https://hammadulhaq.medium.com/dynamic-ai-agents-orchestration-a-new-paradigm-no-its-not-an-mcp-part-1-6f96d33359cf] for routing messages between A2A enabled AI agents and marshalling MCP tool servers.
 
-https://github.com/user-attachments/assets/b952b0f7-550a-44a3-b882-2bb3345be0b1
+<!-- https://github.com/user-attachments/assets/b952b0f7-550a-44a3-b882-2bb3345be0b1 -->
 
-**Breaking Changes since v0.0.8**
-
-- `callbackFunction` has been removed from `router.connect` infavor of event emissions ([see below](#router-with-agents)).
-- Sub-agent calls now use their own unique `taskId`s to prevent task overlap.
-- Router no longer takes a generic `ContextManager` and now requires the new [`EventBus`](/src/utils/event-bus.ts) which centralizes event emissions across contexts.
-- `respondOnFinalOnly` has been removed infavor of [`TaskOptions`](/src/types/router.ts)
-- `callAgents` now uses `sendMessage` instead of `streamMessage`.
+> **Note:** @artinet/router will transition to @artinet/orchestrator @ v0.0.20
 
 ## Features
 
@@ -228,6 +222,16 @@ const response = await router.connect({
 - `createAgent(params)` - Create new agent instance
 - `createTool(server)` - Create tool from MCP server
 - `close()` - Close all connections
+
+### **Migration Changes**
+
+_since v0.0.8_
+
+- `callbackFunction` has been removed from `router.connect` infavor of event emissions ([see below](#router-with-agents)).
+- Sub-agent calls now use their own unique `taskId`s to prevent task overlap.
+- Router no longer takes a generic `ContextManager` and now requires the new [`EventBus`](/src/utils/event-bus.ts) which centralizes event emissions across contexts.
+- `respondOnFinalOnly` has been removed infavor of [`TaskOptions`](/src/types/router.ts)
+- `callAgents` now uses `sendMessage` instead of `streamMessage`.
 
 ## About
 
