@@ -120,7 +120,7 @@ describe.skip("API Tests", () => {
       toolRequest?.callToolRequest.params as CallToolRequest["params"]
     );
     expect(toolResponse).toBeDefined();
-    expect((toolResponse as CallToolResult).content[0].text).toEqual(
+    expect(((toolResponse as CallToolResult).content[0] as any).text).toEqual(
       "Echo: test-message"
     );
   }, 60000);
@@ -153,7 +153,7 @@ describe.skip("API Tests", () => {
       toolRequest?.callToolRequest.params as CallToolRequest["params"]
     );
     expect(toolResponse).toBeDefined();
-    expect((toolResponse as CallToolResult).content[0].text).toEqual(
+    expect(((toolResponse as CallToolResult).content[0] as any).text).toEqual(
       "Echo: test-message"
     );
     const newSession: Session = {

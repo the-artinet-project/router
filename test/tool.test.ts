@@ -12,7 +12,7 @@ import {
   StdioServerParameters,
 } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { Config, ToolInfo } from "@artinet/types";
+import { LocalTool, ToolInfo } from "@artinet/types";
 import {
   getToolInfo,
   initClient,
@@ -20,15 +20,22 @@ import {
   createTool,
   InitializedTool,
 } from "../src/index.js";
+
 import { safeStdioTransport, safeClose } from "../src/utils/safeTransport.js";
 jest.setTimeout(10000);
 
-const config: Config = {
+const config: Record<string, LocalTool> = {
   "server-everything": {
+    type: "mcp",
+    id: "server-everything",
+    uri: "server-everything",
     command: "npx",
     args: ["-y", "@modelcontextprotocol/server-everything"],
   },
   "server-filesystem": {
+    type: "mcp",
+    id: "server-filesystem",
+    uri: "server-filesystem",
     command: "npx",
     args: ["-y", "@modelcontextprotocol/server-filesystem", "/home/"],
   },

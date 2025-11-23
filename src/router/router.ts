@@ -275,7 +275,9 @@ export class LocalRouter implements IRouter {
     if (AgentCardSchema.safeParse(agentParams.agentCard).error) {
       throw new Error(
         `Invalid agent card: ${
-          agentParams?.agentCard?.name ?? "name not detected"
+          (agentParams?.agentCard as AgentCard)
+            ? (agentParams?.agentCard as AgentCard).name ?? "name not detected"
+            : agentParams?.agentCard
         } - ${JSON.stringify(
           AgentCardSchema.safeParse(agentParams.agentCard).error
         )}`

@@ -115,7 +115,7 @@ function getCapabilities(client: Client): ServerCapabilities {
   if (!serverCapabilities) {
     throw new Error("getCapabilities: Server capabilities not found");
   }
-  if (!serverCapabilities.tools || serverCapabilities.tools.length === 0) {
+  if (!serverCapabilities.tools) {
     throw new Error("getCapabilities: Server tools not found");
   }
   return serverCapabilities;

@@ -23,7 +23,7 @@ export function parseResponse(response: ConnectResponse): string {
   return (
     safeParseJSON(response.agentResponse)?.data?.[0]?.generated_text ??
     `router:failed to parse response: ${
-      response.agentResponse ?? response.systemMessage ?? response.error
+      response.systemMessage ?? response.agentResponse ?? response.error
     }`
   ).trim();
 }
@@ -170,7 +170,7 @@ export class SessionManager implements ISessionManager {
       this.connectRequest,
       this.abortSignal
     );
-
+    //todo delete this (artinet specific)
     this.responseText = parseResponse(response);
     this.connectRequest.session = updateSession(this.connectRequest.session, {
       role: "agent",

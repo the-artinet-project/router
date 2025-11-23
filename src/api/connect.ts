@@ -9,7 +9,7 @@ import {
 } from "@artinet/types";
 import { safeParse, safeParseJSON } from "../utils/parse.js";
 import { logger } from "../utils/logger.js";
-
+//Todo: agentresponse field should only be a string and not a nested JSON object
 export async function connectv1(
   props: ConnectRequest,
   abortSignal?: AbortSignal

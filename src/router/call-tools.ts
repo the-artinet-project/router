@@ -35,6 +35,7 @@ function createStderrMonitor(
     });
   };
 }
+
 /**
  * Calls tools and returns the responses.
  * @returns The tool responses.
@@ -49,7 +50,7 @@ export async function callTools(
   }
   const { callbackFunction } = options;
   let toolResponses: ToolResponse[] = [];
-  const limit = pLimit(10);
+  const limit = pLimit(Math.min(10, toolRequests.length));
   await Promise.all(
     toolRequests.map((toolRequest) =>
       limit(async () => {

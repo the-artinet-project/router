@@ -77,7 +77,7 @@ export async function callAgents(
   }
   const { taskId: parentTaskId, callbackFunction } = options;
   let agentResponses: AgentResponse[] = [];
-  const limit = pLimit(10);
+  const limit = pLimit(Math.min(10, agentRequests.length));
   await Promise.all(
     agentRequests.map((agentRequest) =>
       limit(async () => {
