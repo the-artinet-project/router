@@ -10,7 +10,7 @@
 
 A (dynamic orchestration library)[https://hammadulhaq.medium.com/dynamic-ai-agents-orchestration-a-new-paradigm-no-its-not-an-mcp-part-1-6f96d33359cf] for routing messages between A2A enabled AI agents and marshalling MCP tool servers.
 
-<!-- https://github.com/user-attachments/assets/b952b0f7-550a-44a3-b882-2bb3345be0b1 -->
+https://github.com/user-attachments/assets/b952b0f7-550a-44a3-b882-2bb3345be0b1
 
 > **Note:** @artinet/router will transition to @artinet/orchestrator @ v0.0.20
 
