@@ -1,13 +1,17 @@
-import { SessionMessage } from "@artinet/types";
-import { Task, Message, getContent } from "@artinet/sdk";
+/**
+ * Copyright 2025 The Artinet Project
+ * SPDX-License-Identifier: Apache-2.0
+ */
+import { API } from "@artinet/types";
+import { A2A, getContent } from "@artinet/sdk";
 
 export function getHistory(
-  task: Task,
-  filter?: (message: SessionMessage) => boolean
-): SessionMessage[] {
+  task: A2A.Task,
+  filter?: (message: API.Message) => boolean
+): API.Message[] {
   if (!task) return [];
-  let history: SessionMessage[] =
-    task.history?.map((message: Message) => {
+  let history: API.Message[] =
+    task.history?.map((message: A2A.Message) => {
       return {
         role: message.role,
         content: getContent(message) ?? "",
@@ -15,10 +19,10 @@ export function getHistory(
     }) ?? [];
   if (!task.metadata?.referencedTasks) return history;
   history = [
-    ...(task.metadata?.referencedTasks as Task[])
-      ?.flatMap((referencedTask: Task) => {
-        const sessionMessages: SessionMessage[] =
-          referencedTask.history?.map((message: Message) => {
+    ...(task.metadata?.referencedTasks as A2A.Task[])
+      ?.flatMap((referencedTask: A2A.Task) => {
+        const sessionMessages: API.Message[] =
+          referencedTask.history?.map((message: A2A.Message) => {
             return {
               role: message.role,
               content: getContent(message) ?? "",
@@ -26,9 +30,9 @@ export function getHistory(
           }) ?? [];
         return sessionMessages;
       })
-      .filter((message: SessionMessage) => message !== undefined)
+      .filter((message: API.Message) => message !== undefined)
       .filter(
-        (message: SessionMessage) =>
+        (message: API.Message) =>
           message.content !== "" &&
           message.content !== "{}" &&
           message.content !== "[]"

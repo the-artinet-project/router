@@ -1,9 +1,13 @@
+/**
+ * Copyright 2025 The Artinet Project
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import {
   StdioClientTransport,
   StdioServerParameters,
 } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { logger } from "./logger.js";
+import { logger } from "@artinet/sdk";
 
 export async function safeClose(
   client: Client,

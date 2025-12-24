@@ -2,74 +2,44 @@
  * Copyright 2025 The Artinet Project
  * SPDX-License-Identifier: Apache-2.0
  */
-import {
-  ConnectRequest,
-  ConnectResponse,
-  ConnectResponseSchema,
-} from "@artinet/types";
-import { safeParse, safeParseJSON } from "../utils/parse.js";
-import { logger } from "../utils/logger.js";
-//Todo: agentresponse field should only be a string and not a nested JSON object
-export async function connectv1(
-  props: ConnectRequest,
-  abortSignal?: AbortSignal
-): Promise<ConnectResponse> {
-  try {
-    const restResponse = await fetch(
-      "https://api.stage.artinet.io/v1/connect",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Headers": "*",
-          "Access-Control-Allow-Methods": "*",
-          "Access-Control-Allow-Credentials": "true",
-        },
-        body: JSON.stringify({
-          ...props,
-        }),
-        signal: abortSignal,
-      }
-    );
-    // logger.log("connectv1: ", "restResponse: ", restResponse);
-    if (!restResponse.ok) {
-      const text = await restResponse.text();
-      throw new Error(
-        "Failed to fetch agent response: " +
-          restResponse.statusText +
-          " " +
-          restResponse.status +
-          " " +
-          (text ?? "")
-      );
-    }
-    const text = await restResponse.text();
-    const json = safeParseJSON(text).data ?? {};
-    return (
-      safeParse(json?.body, ConnectResponseSchema).data ?? {
-        agentResponse: text,
-        timestamp: new Date().toISOString(),
-        error: "connectv1: failed to parse response: " + text,
-        options: {},
-      }
-    );
-  } catch (error: any) {
-    logger.error("connectv1: ", "Error connecting to api:", error);
-    return {
-      agentResponse: JSON.stringify(
-        [
-          {
-            generated_text:
-              error instanceof Error ? error.message : JSON.stringify(error),
-          },
-        ],
-        null,
-        2
-      ),
-      timestamp: new Date().toISOString(),
-      error: error,
-      options: {},
-    };
+import { API } from "@artinet/types";
+import { logger, safeParse, safeParseSchema } from "@artinet/sdk";
+import { APIProvider } from "../model-util.js";
+
+const PROVIDER_URL =
+  process.env.ARTINET_API_URL ?? "https://api.stage.artinet.io/v1/connect";
+
+export const artinetProvider: APIProvider = async (
+  request: API.ConnectRequest,
+  abortSignal?: AbortSignal,
+  headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "*",
+    "Access-Control-Allow-Methods": "*",
+    "Access-Control-Allow-Credentials": "true",
   }
-}
+): Promise<API.ConnectResponse> => {
+  const restResponse = await fetch(PROVIDER_URL, {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify(request),
+    signal: abortSignal,
+  });
+  if (!restResponse.ok) {
+    const text = await restResponse.text();
+    const error = new Error(
+      `Failed to fetch agent response: ${restResponse.statusText} ${
+        restResponse.status
+      } ${text ?? ""}`
+    );
+    logger.error(
+      `[${request.identifier}:${request.preferredEndpoint}]: ${error.message}`,
+      error
+    );
+    throw error;
+  }
+  const text = await restResponse.text();
+  const json = safeParse(text).data ?? {};
+  return await safeParseSchema(json?.body, API.ConnectResponseSchema);
+};

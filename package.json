@@ -1,6 +1,6 @@
 {
-  "version": "0.0.19-b",
-  "name": "@artinet/router",
+  "version": "0.0.20-alpha.1",
+  "name": "@artinet/orchestrator",
   "description": "A library for orchestrating A2A enabled AI agents that can call MCP servers.",
   "author": "artinet",
   "homepage": "https://artinet.io",
@@ -55,13 +55,15 @@
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage"
   },
   "dependencies": {
-    "@artinet/agent-relay": "^0.0.8",
-    "@artinet/sdk": "^0.5.18",
-    "@artinet/types": "^0.0.8",
-    "@modelcontextprotocol/sdk": "^1.20.1",
+    "@artinet/agent-relay": "^0.0.9-alpha.1",
+    "@artinet/sdk": "^0.6.0-preview.1",
+    "@artinet/types": "^0.0.9-alpha.1",
     "p-limit": "^7.1.1",
     "uuid": "^11.1.0",
-    "zod": "^3.23.8"
+    "zod": "^3.25"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": "^1.24.3"
   },
   "devDependencies": {
     "@cfworker/json-schema": "^4.1.1",

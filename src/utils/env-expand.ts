@@ -4,7 +4,7 @@
  */
 import { execSync } from "child_process";
 import { platform } from "os";
-import { logger } from "./logger.js";
+import { logger } from "@artinet/sdk";
 //todo: use dotenvx?
 function expandShellVariable(variable: string): string {
   try {
