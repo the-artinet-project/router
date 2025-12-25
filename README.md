@@ -1,9 +1,9 @@
 [![Website](https://img.shields.io/badge/website-artinet.io-black)](https://artinet.io/)
-[![npm version](https://img.shields.io/npm/v/o8.svg)](https://www.npmjs.com/package/@artinet/orchestrator)
-[![npm downloads](https://img.shields.io/npm/dt/@artinet/router.svg)](https://www.npmjs.com/package/@artinet/orchestrator)
+[![npm version](https://img.shields.io/npm/v/orc8.svg)](https://www.npmjs.com/package/orc8)
+[![npm downloads](https://img.shields.io/npm/dt/@artinet/router.svg)](https://www.npmjs.com/package/orc8)
 [![Apache License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Known Vulnerabilities](https://snyk.io/test/npm/o8/badge.svg)](https://snyk.io/test/npm/@artinet/orchestrator)
-[![GitHub stars](https://img.shields.io/github/stars/the-artinet-project/o8?style=social)](https://github.com/the-artinet-project/orchestrator/stargazers)
+[![Known Vulnerabilities](https://snyk.io/test/npm/orc8/badge.svg)](https://snyk.io/test/npm/orc8)
+[![GitHub stars](https://img.shields.io/github/stars/the-artinet-project/orc8?style=social)](https://github.com/the-artinet-project/orc8/stargazers)
 [![Discord](https://dcbadge.limes.pink/api/server/DaxzSchmmX?style=flat)](https://discord.gg/DaxzSchmmX)
 
 # orc8
