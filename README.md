@@ -1,246 +1,136 @@
 [![Website](https://img.shields.io/badge/website-artinet.io-black)](https://artinet.io/)
-[![npm version](https://img.shields.io/npm/v/@artinet/router.svg)](https://www.npmjs.com/package/@artinet/router)
-[![npm downloads](https://img.shields.io/npm/dt/@artinet/router.svg)](https://www.npmjs.com/package/@artinet/router)
+[![npm version](https://img.shields.io/npm/v/@artinet/router.svg)](https://www.npmjs.com/package/@artinet/orchestrator)
+[![npm downloads](https://img.shields.io/npm/dt/@artinet/router.svg)](https://www.npmjs.com/package/@artinet/orchestrator)
 [![Apache License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Known Vulnerabilities](https://snyk.io/test/npm/@artinet/router/badge.svg)](https://snyk.io/test/npm/@artinet/router)
-[![GitHub stars](https://img.shields.io/github/stars/the-artinet-project/router?style=social)](https://github.com/the-artinet-project/router/stargazers)
+[![Known Vulnerabilities](https://snyk.io/test/npm/@artinet/orchestrator/badge.svg)](https://snyk.io/test/npm/@artinet/orchestrator)
+[![GitHub stars](https://img.shields.io/github/stars/the-artinet-project/orchestrator?style=social)](https://github.com/the-artinet-project/orchestrator/stargazers)
 [![Discord](https://dcbadge.limes.pink/api/server/DaxzSchmmX?style=flat)](https://discord.gg/DaxzSchmmX)
 
 # @artinet/orchestrator
 
-A [dynamic orchestration library](https://hammadulhaq.medium.com/dynamic-ai-agents-orchestration-a-new-paradigm-no-its-not-an-mcp-part-1-6f96d33359cf) for routing messages between A2A enabled AI agents and marshalling MCP tool servers.
-
-https://github.com/user-attachments/assets/b952b0f7-550a-44a3-b882-2bb3345be0b1
-
-> **Note:** @artinet/router will transition to @artinet/orchestrator @ v0.0.20
-
-## Features
-
-- **Dynamic Dispatch**: Route messages between multiple AI agents
-- **Automatic Discovery**: Automatically detects local A2A servers
-- **Tool Integration**: MCP tool integration with concurrent execution
-- **Session Management**: Persistent sessions with message history
-- **Task Handoff**: Supports context chaining by using A2A `referenceTasks`
+Dynamic orchestration for A2A agents and MCP tools.
 
 ## Installation
 
 ```bash
-npm install @artinet/router
+npm install @artinet/orchestrator @modelcontextprotocol/sdk
 ```
 
 ## Quick Start
 
-Use the [`create-agent`](https://www.npmjs.com/package/@artinet/create-agent) command:
-
-```bash
-npx @artinet/create-agent@latest
-```
-
-Select the [orchestrator agent](https://github.com/the-artinet-project/create-agent/blob/main/templates/orchestrator/src/agent.ts) to jump right into agent routing.
-
-### Basic Usage
-
 ```typescript
-import { LocalRouter } from "@artinet/router";
+import { create } from "@artinet/orchestrator";
 
-const router = new LocalRouter();
+const model = create({ modelId: "gpt-4" });
 
-const result = await router.connect({
-  message: "Hello, World!",
+// Add MCP tools
+model.add({
+  command: "npx",
+  args: ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"],
 });
+
+// Connect and get a response
+const response = await model.connect("List files in /tmp");
+console.log(response);
+
+// Clean up
+await model.stop();
 ```
 
-### Router with Agents
-
-**Create an agent and define its behavior:**
+## Adding Agents
 
 ```typescript
-import { LocalRouter } from "@artinet/router";
-import { AgentBuilder, FileStore, getPayload } from "@artinet/sdk";
+import { create } from "@artinet/orchestrator";
 
-const router = new LocalRouter();
-router.createAgent({
-  engine: AgentBuilder()
-    .text(({ content: userInput }) => {
-      return userInput;
-    })
-    .createAgentEngine(),
+const model = create({ modelId: "gpt-4" });
+
+model.add({
+  engine: async function* (context: A2A.Context) {
+    yield {
+      kind: "status-update",
+      status: {
+        state: "completed",
+        message: {
+          kind: "message",
+          role: "agent",
+          parts: [
+            {
+              kind: "text",
+              text: `Hello from agent!`,
+            },
+          ],
+          messageId: "msg-1",
+        },
+      },
+      taskId: context.taskId,
+      contextId: context.contextId,
+      final: true,
+    };
+  },
   agentCard: {
     name: "EchoAgent",
-    description: "Echos back every request exactly",
-    ...
+    description: "Echoes back every request",
   },
 });
 
-//The router will dynamically orchestrate the agents & tools
-const result: string = await router.connect({
-  message: "Use the echo agent to reply to me",
-  agents: ["EchoAgent"], // Provide a list of allowed agents
-  taskId: "task123", // Pass a taskId to resume a saved agent session
-});
-
-await router.close();
+const result = await model.connect("Say hello");
 ```
 
-**Subscribe to updates like the results of tool/agent calls:**
+## Events
 
 ```typescript
-router.on("update", (response: any[]) => {
-  console.log(response);
+model.events.on("update", (data) => {
+  console.log("Update:", data);
+});
+
+model.events.on("error", (error, task) => {
+  console.error(`Error in ${task.id}:`, error);
 });
 ```
 
-### Router as Agent
+## Expose as an A2A Agent
 
 ```typescript
-import { LocalRouter } from "@artinet/router";
-import { AgentBuilder, FileStore } from "@artinet/sdk";
+const agent = model.agent;
 
-// Create a router with tools
-const router = await LocalRouter.createRouter({
-  mcpServers: {
-    stdioServers: [
-      {
-        command: "npx",
-        args: [
-          "-y",
-          "@modelcontextprotocol/server-filesystem",
-          "/path/to/allowed/files",
-        ],
-      },
-      {
-        command: "uvx",
-        args: ["mcp-server-fetch"],
-      },
-    ],
-  },
-});
-
-// Convert the router into an agent
-const agent = router.toAgent(
-  // Provide instructions for the agent to follow
-  "You are a File Management agent. Save every request you recieve in a text file",
-  { // The AgentCard describing the Agent and it's skills
-    name: "File Manager",
-    description: "An agent that can manage the file system",
-    ...
-  },
-  { // Add optional whitelists for tools & agents (defaults to all available tools/agents)
-    tools: ["secure-filesystem-server"],
-    agents: [...],
-  }
-);
-
-// Interact with the new agent as you normally would
-const result = agent.sendMessage({
+await agent.sendMessage({
   message: {
-    ...
     role: "user",
-    parts: [{ kind: "text", text: "Please save this message" }],
+    parts: [{ kind: "text", text: "Hello" }],
   },
 });
-
-await router.close();
 ```
 
-### Bring Your Own API
+## Custom Provider
 
-Implement an `ApiProvider` function to plug in your own backend.
-
-Consume a `ConnectRequest` from the router and return a `ConnectResponse`.
-
-Each `ConnectRequest` will include:
-
-- The available tools/agents that have been whitelisted for the request.
-- The responses/results of previous agent/tool calls. (e.g. `AgentResponse`, `ToolResponse`)
-
-Ensure that you include an array of `ToolRequest`s and/or `AgentRequest`s in your `ConnectResponse`. This will trigger the router to invoke those tools/agents
+Bring your own LLM backend:
 
 ```typescript
+import { create, type APIProvider } from "@artinet/orchestrator";
 
-// Plug-in your own API function by converting tool/agent Calls into a format that the router will understand
-const response = await router.connect({
-  message: {
-    session: { messages: [{ role: "user", content: "Hello!" }] },
-    apiProvider: async (request: ConnectRequest) => {
-      // The tools/agents available for this request
-      const availableTools = request.options?.tools?.localServers;
-      const availableAgents = request.options?.agents?.localServers;
-      // The responses/results of previous tool/agent invocations
-      const toolResponses = request.options?.tools?.results;
-      const agentResponses = request.options?.agents?.responses;
-
-      ... // Call your own API here
-
-      // Then return a response including requests to any tools and agents
-      const response: ConnectResponse = {
-        agentResponse: "Hello!", // A response from the LLM
-        timestamp: new Date().toISOString(),
-        options: {
-          tools: {
-            results: [],
-            requests: [
-              {
-                // Format a tool request
-                kind: "tool_request",
-                callToolRequest: {
-                  method: "tools/call",
-                  params: {
-                    name: "say-hello",
-                  },
-                },
-                id: "hello-tool",
-              },
-            ],
-          },
-          agents: {
-            responses: [],
-            requests: [
-              {
-                // Format an agent request
-                kind: "agent_request",
-                uri: "HelloAgent",
-                directive: "Say Hello!",
-              },
-            ],
-          },
-        },
-      };
-      return response;
+const provider: APIProvider = async (request, signal) => {
+  const response = await myLLM.chat(request.messages, { signal });
+  return {
+    agentResponse: response.content,
+    timestamp: new Date().toISOString(),
+    options: {
+      tools: { requests: response.toolCalls ?? [] },
+      agents: { requests: response.agentCalls ?? [] },
     },
-  },
-  tools: ["hello-tool"],
-  agents: ["HelloAgent"],
-});
+  };
+};
+
+const model = create({ modelId: "my-model", provider });
 ```
 
-\*Currently only supports stdio MCP Servers.
+## Environment
 
-### Core Commands
-
-- `connect(params, tools[], agents[], callback?)` - Execute task with routing
-- `createAgent(params)` - Create new agent instance
-- `createTool(server)` - Create tool from MCP server
-- `close()` - Close all connections
-
-### **Migration Changes**
-
-_since v0.0.8_
-
-- `callbackFunction` has been removed from `router.connect` infavor of event emissions ([see below](#router-with-agents)).
-- Sub-agent calls now use their own unique `taskId`s to prevent task overlap.
-- Router no longer takes a generic `ContextManager` and now requires the new [`EventBus`](/src/utils/event-bus.ts) which centralizes event emissions across contexts.
-- `respondOnFinalOnly` has been removed infavor of [`TaskOptions`](/src/types/router.ts)
-- `callAgents` now uses `sendMessage` instead of `streamMessage`.
-
-## About
-
-This library leverages api.artinet.io to route commands to local agents & tools.
-
-## Deprecation Notice
-
-The `@modelcontextprotocol/sdk` will be changed to a peer dependancy in a future release.
+| Variable              | Description          | Default                                   |
+| --------------------- | -------------------- | ----------------------------------------- |
+| `ARTINET_API_URL`     | API endpoint         | `https://api.stage.artinet.io/v1/connect` |
+| `DEFAULT_CONCURRENCY` | Max concurrent calls | `10`                                      |
+| `DEFAULT_ITERATIONS`  | Max agentic loops    | `10`                                      |
 
 ## License
 
-Apache-2.0 - see [LICENSE](LICENSE)
+Apache-2.0

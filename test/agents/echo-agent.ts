@@ -1,6 +1,10 @@
-import { AgentCard, AgentEngine, Context, getParts } from "@artinet/sdk";
+/**
+ * Copyright 2025 The Artinet Project
+ * SPDX-License-Identifier: Apache-2.0
+ */
+import { A2A, getContent } from "@artinet/sdk";
 
-export const testAgentCard: AgentCard = {
+export const testAgentCard: A2A.AgentCard = {
   description: "A test agent for unit tests",
   name: "test-agent",
   url: "https://test-agent.com",
@@ -26,8 +30,11 @@ export const testAgentCard: AgentCard = {
   ],
 };
 
-export const echoAgentEngine: AgentEngine = async function* (context: Context) {
-  const { text: userText } = getParts(context.command.message.parts);
+export const echoAgentEngine: A2A.Engine = async function* (
+  context: A2A.Context
+) {
+  const userText = getContent(context.userMessage) ?? "";
+
   yield {
     kind: "status-update",
     status: {
@@ -35,12 +42,12 @@ export const echoAgentEngine: AgentEngine = async function* (context: Context) {
       message: {
         kind: "message",
         role: "agent",
-        parts: [{ kind: "text", text: JSON.stringify({ response: userText }) }],
-        messageId: context.command.message.messageId ?? "",
+        parts: [{ kind: "text", text: `Echo: ${userText}` }],
+        messageId: context.userMessage.messageId ?? "",
       },
     },
-    taskId: context.command.message.taskId ?? "",
-    contextId: context.command.message.contextId ?? "",
+    taskId: context.taskId,
+    contextId: context.contextId,
     final: false,
   };
 };

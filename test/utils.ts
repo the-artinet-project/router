@@ -1,27 +1,26 @@
-import {
-  ConnectRequest,
-  ConnectResponse,
-  ConnectResponseSchema,
-  ConnectResponseOptions,
-  ToolRequest,
-  AgentRequest,
-  AgentResponse,
-  ToolResponse,
-} from "@artinet/types";
-import { logger } from "../src/utils/logger";
-import { safeParseJSON, safeParse } from "../src/utils/parse";
-import { ApiProvider } from "../src";
+/**
+ * Copyright 2025 The Artinet Project
+ * SPDX-License-Identifier: Apache-2.0
+ */
+import { API, Runtime } from "@artinet/types";
+import { APIProvider } from "../src/model-util.js";
 
+/**
+ * Creates mock response options for testing.
+ * Note: ConnectResponse.options has a different structure than ConnectOptions
+ * - It uses `requests` for tool/agent requests from the model
+ * - It uses `responses` for tool/agent responses (results)
+ */
 export const MOCK_RESPONSE_OPTIONS = (
-  toolRequests: ToolRequest[] = [],
-  agentRequests: AgentRequest[] = [],
-  toolResults: ToolResponse[] = [],
-  agentResponses: AgentResponse[] = []
-): ConnectResponseOptions => {
+  toolRequests: Runtime.ToolRequest[] = [],
+  agentRequests: Runtime.AgentRequest[] = [],
+  toolResponses: Runtime.ToolResponse[] = [],
+  agentResponses: Runtime.AgentResponse[] = []
+): API.ConnectResponse["options"] => {
   return {
     tools: {
       requests: toolRequests,
-      results: toolResults,
+      responses: toolResponses,
     },
     agents: {
       requests: agentRequests,
@@ -32,100 +31,68 @@ export const MOCK_RESPONSE_OPTIONS = (
 
 export const MOCK_CONNECT_RESPONSE = (
   response: string,
-  options: ConnectResponseOptions = MOCK_RESPONSE_OPTIONS()
-): ConnectResponse => {
+  options: API.ConnectResponse["options"] = MOCK_RESPONSE_OPTIONS()
+): API.ConnectResponse => {
   return {
-    agentResponse: JSON.stringify([
-      {
-        generated_text: response,
-      },
-    ]),
+    agentResponse: response,
     timestamp: new Date().toISOString(),
     options: options,
   };
 };
 
-export async function MOCK_CONNECT(
-  props: ConnectRequest,
-  abortSignal?: AbortSignal,
-  mockResponse?: ConnectResponse
-): Promise<ConnectResponse> {
-  if (mockResponse) return mockResponse;
-  try {
-    const restResponse = await fetch(
-      "https://api.stage.artinet.io/v1/connect",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Headers": "*",
-          "Access-Control-Allow-Methods": "*",
-          "Access-Control-Allow-Credentials": "true",
-        },
-        body: JSON.stringify({
-          ...props,
-        }),
-        signal: abortSignal,
-      }
-    );
-    // logger.log("connectv1: ", "restResponse: ", restResponse);
-    if (!restResponse.ok) {
-      const text = await restResponse.text();
-      throw new Error(
-        "Failed to fetch agent response: " +
-          restResponse.statusText +
-          " " +
-          restResponse.status +
-          " " +
-          (text ?? "")
-      );
-    }
-    const text = await restResponse.text();
-    const json = safeParseJSON(text).data ?? {};
-    return (
-      safeParse(json?.body, ConnectResponseSchema).data ?? {
-        agentResponse: text,
-        timestamp: new Date().toISOString(),
-        error: "connectv1: failed to parse response: " + text,
-        options: {},
-      }
-    );
-  } catch (error: any) {
-    logger.error("connectv1: ", "Error connecting to api:", error);
-    return {
-      agentResponse: JSON.stringify(
-        [
-          {
-            generated_text:
-              error instanceof Error ? error.message : JSON.stringify(error),
-          },
-        ],
-        null,
-        2
-      ), //`Client error: Unfortunately, this agent is currently experiencing issues. Please try again later.`,
-      timestamp: new Date().toISOString(),
-      error: error,
-      options: {},
-    };
-  }
-}
-
-export const MOCK_PROVIDER = (mockResponse: ConnectResponse): ApiProvider => {
-  return (request: ConnectRequest, abortSignal?: AbortSignal) =>
-    MOCK_CONNECT(request, abortSignal, mockResponse);
+export const MOCK_PROVIDER = (
+  mockResponse: API.ConnectResponse
+): APIProvider => {
+  return (_request: API.ConnectRequest, _abortSignal?: AbortSignal) =>
+    Promise.resolve(mockResponse);
 };
 
 export function createMockProvider(
   responseMessage: string,
-  toolRequests: ToolRequest[] = [],
-  agentRequests: AgentRequest[] = []
-): ApiProvider {
-  const apiProvider: ApiProvider = MOCK_PROVIDER(
+  toolRequests: Runtime.ToolRequest[] = [],
+  agentRequests: Runtime.AgentRequest[] = []
+): APIProvider {
+  const apiProvider: APIProvider = MOCK_PROVIDER(
     MOCK_CONNECT_RESPONSE(
       responseMessage,
       MOCK_RESPONSE_OPTIONS(toolRequests, agentRequests)
     )
   );
   return apiProvider;
+}
+
+/**
+ * Creates a mock tool request for testing.
+ */
+export function createMockToolRequest(
+  uri: string,
+  toolName: string,
+  args: Record<string, unknown> = {}
+): Runtime.ToolRequest {
+  return {
+    type: "mcp",
+    kind: "tool_request",
+    uri: uri,
+    call: {
+      name: toolName,
+      arguments: args,
+    },
+    id: `test-${toolName}-${Date.now()}`,
+  };
+}
+
+/**
+ * Creates a mock agent request for testing.
+ */
+export function createMockAgentRequest(
+  uri: string,
+  message: string
+): Runtime.AgentRequest {
+  return {
+    type: "a2a",
+    kind: "agent_request",
+    uri: uri,
+    call: message,
+    id: `test-${uri}-${Date.now()}`,
+  };
 }

@@ -1,4 +1,21 @@
 /**
+ * @fileoverview
+ * Model utility functions for orchestration operations.
+ *
+ * This module provides the core utility functions used by the Model class
+ * for request/response handling, service management, and the reactive
+ * agentic loop. Key responsibilities:
+ *
+ * - API Provider type definition for LLM backend integration
+ * - Request construction and normalization
+ * - Response extraction and formatting
+ * - Callable service registration
+ * - Reactive loop implementation with iteration limits
+ * - Agent card generation from registered services
+ *
+ * @module model-util
+ * @license Apache-2.0
+ *
  * Copyright 2025 The Artinet Project
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -15,11 +32,40 @@ import { StdioServerParameters } from "@modelcontextprotocol/sdk/client/stdio.js
 import { Agent } from "./agent.js";
 import { Tool } from "./tool.js";
 
+/**
+ * Function type for API providers that communicate with LLM backends.
+ *
+ * Implement this interface to integrate custom LLM backends with the orchestrator.
+ * The provider receives a connect request with available tools/agents and
+ * must return a response that may include tool/agent invocation requests.
+ *
+ * @param request - The connect request with messages and service options
+ * @param abortSignal - Optional signal for request cancellation
+ * @returns Promise resolving to the LLM's response with potential tool/agent calls
+ *
+ * @example
+ * ```typescript
+ * const myProvider: APIProvider = async (request, signal) => {
+ *   const llmResponse = await myLLM.chat(request.messages, { signal });
+ *   return {
+ *     agentResponse: llmResponse.content,
+ *     options: {
+ *       tools: { requests: llmResponse.toolCalls }
+ *     }
+ *   };
+ * };
+ * ```
+ */
 export type APIProvider = (
   request: API.ConnectRequest,
   abortSignal?: AbortSignal
 ) => Promise<API.ConnectResponse>;
 
+/**
+ * Function type for invoking multiple callables with shared options.
+ *
+ * @internal
+ */
 export type InvokeCallables = ({
   request,
   options,
@@ -28,6 +74,13 @@ export type InvokeCallables = ({
   options: Callable.Options;
 }) => Promise<Callable.Response[]>;
 
+/**
+ * Extracts callable requests from an API response.
+ *
+ * @param response - The API response containing potential tool/agent requests
+ * @returns Array of callable requests to execute
+ * @internal
+ */
 function createCall(response: API.ConnectResponse): Callable.Request[] {
   return [
     ...(response.options?.tools?.requests ?? []),
@@ -35,6 +88,18 @@ function createCall(response: API.ConnectResponse): Callable.Request[] {
   ];
 }
 
+/**
+ * Updates a request with callable responses and additional messages.
+ *
+ * Appends new responses to the appropriate tool/agent response arrays
+ * and adds any new messages to the conversation.
+ *
+ * @param request - The request to update
+ * @param responses - New callable responses to include
+ * @param messages - Additional messages to append
+ * @returns The updated request
+ * @internal
+ */
 function update(
   request: API.ConnectRequest,
   responses: Callable.Response[] = [],
@@ -64,14 +129,34 @@ function update(
   return request;
 }
 
-export function options(
+/**
+ * Builds connect options with available callable services.
+ *
+ * Converts registered callables into service descriptors that the LLM
+ * can use to understand available tools and agents.
+ *
+ * @param callables - Array of registered callable services
+ * @param options - Optional base options to extend
+ * @returns Connect options with populated tool/agent services
+ *
+ * @example
+ * ```typescript
+ * const opts = options([myTool, myAgent], { maxTokens: 1000 });
+ * // opts.tools.services contains tool descriptors
+ * // opts.agents.services contains agent descriptors
+ * ```
+ */
+export async function options(
   callables: (Callable.Agent | Callable.Tool)[],
   options?: API.ConnectOptions
-): API.ConnectOptions {
-  const targets = callables.map((callable) => callable.getTarget());
+): Promise<API.ConnectOptions> {
+  //todo convert to async
+  const targets = await Promise.all(
+    callables.map((callable) => callable.getTarget())
+  );
   const tools = targets.filter((target) => Runtime.isToolService(target));
   const agents = targets.filter((target) => Runtime.isAgentService(target));
-  //we limit the options to the tools and agents that are actually available
+  // Limit the options to the tools and agents that are actually available
   return {
     ...options,
     tools: {
@@ -85,6 +170,33 @@ export function options(
   };
 }
 
+/**
+ * Constructs a normalized connect request from various input formats.
+ *
+ * Accepts flexible input:
+ * - Simple string: Converted to a single user message
+ * - API.Message: Wrapped in an array
+ * - API.Session: Used as-is for message array
+ * - API.ConnectRequest: Merged with defaults
+ *
+ * @param modelId - The model identifier for the request
+ * @param messages - Input in any supported format
+ * @param options - Connect options with service configurations
+ * @returns A normalized API.ConnectRequest
+ * @throws {Error} If messages type is not recognized
+ *
+ * @example
+ * ```typescript
+ * // From string
+ * const req1 = request("gpt-4", "Hello!", opts);
+ *
+ * // From message object
+ * const req2 = request("gpt-4", { role: "user", content: "Hi" }, opts);
+ *
+ * // From session
+ * const req3 = request("gpt-4", [msg1, msg2, msg3], opts);
+ * ```
+ */
 export function request(
   modelId: string,
   messages: string | API.Message | API.Session | API.ConnectRequest,
@@ -123,6 +235,17 @@ export function request(
   return request;
 }
 
+/**
+ * Extracts the text content from an API response.
+ *
+ * Handles various response formats:
+ * - String response: Returned directly
+ * - Object with string content: Extracts content
+ * - Object with nested text: Extracts text property
+ *
+ * @param response - The API response to extract from
+ * @returns The extracted text content
+ */
 export function response(response: API.ConnectResponse): string {
   return typeof response.agentResponse === "string"
     ? response.agentResponse
@@ -131,22 +254,58 @@ export function response(response: API.ConnectResponse): string {
     : response.agentResponse.content.text;
 }
 
+/**
+ * Union type for all service types that can be added to the orchestrator.
+ *
+ * Supports:
+ * - `A2A_Agent`: Existing A2A agent instance
+ * - `A2AClient`: Remote A2A client connection
+ * - `CreateAgentParams`: Parameters for creating a new agent
+ * - `StdioServerParameters`: MCP server configuration for tools
+ */
 export type CallableService =
   | A2A_Agent
   | A2AClient
   | Omit<CreateAgentParams, "contexts">
   | StdioServerParameters;
 
+/**
+ * Converts a service definition into a callable instance.
+ *
+ * Automatically detects the service type and creates the appropriate
+ * callable wrapper:
+ * - A2A services/clients → Agent wrapper
+ * - Engine-based definitions → New Agent via create
+ * - Command-based definitions → New Tool via create
+ *
+ * @typeParam T - The specific service type being added
+ * @param service - The service definition to convert
+ * @returns Promise resolving to the created callable
+ * @throws {Error} If the service type cannot be determined
+ *
+ * @example
+ * ```typescript
+ * // Add an MCP tool
+ * const tool = await add({ command: "npx", args: ["@mcp/server"] });
+ *
+ * // Add an existing agent
+ * const agent = await add(existingA2AAgent);
+ *
+ * // Add from agent parameters
+ * const newAgent = await add({ engine: myEngine, agentCard: myCard });
+ * ```
+ */
 export async function add<T extends CallableService = CallableService>(
-  service: T
+  service: T,
+  uri?: string
 ): Promise<Callable.Agent | Callable.Tool> {
   let callable: Callable.Agent | Callable.Tool | undefined = undefined;
   if (service instanceof A2A_Service || service instanceof A2AClient) {
-    callable = Agent.from(service);
+    callable = Agent.from(service, uri);
   } else if (typeof service === "object" && "engine" in service) {
-    callable = Agent.create(service);
+    callable = Agent.create(service, uri);
   } else if (typeof service === "object" && "command" in service) {
-    callable = await Tool.create(service);
+    callable = await Tool.create(service, uri);
   }
   if (!callable) {
     throw new Error(`[Model:add]: Invalid service type: ${typeof service}`);
@@ -154,6 +313,13 @@ export async function add<T extends CallableService = CallableService>(
   return callable;
 }
 
+/**
+ * System message injected when the agentic loop reaches max iterations.
+ *
+ * Instructs the LLM to summarize progress and provide next steps
+ * rather than attempting additional tool/agent calls.
+ * @internal
+ */
 const max_iterations_message: API.Message = {
   role: "system",
   content: `
@@ -162,6 +328,35 @@ The assistant must now formulate a final response to the user summarising what h
 In the final response, the assistant will also provide the user with suggestions for next steps and ask them whether they would like to continue.`,
 };
 
+/**
+ * Implements the reactive agentic loop for orchestrated execution.
+ *
+ * This is the core orchestration loop that:
+ * 1. Sends requests to the LLM provider
+ * 2. Extracts tool/agent calls from the response
+ * 3. Executes the calls concurrently
+ * 4. Feeds results back to the LLM
+ * 5. Repeats until no more calls or max iterations reached
+ *
+ * @param request - The initial connect request
+ * @param provider - The API provider for LLM communication
+ * @param call - Function to invoke callables
+ * @param history - Response history for context accumulation
+ * @param options - Execution options with iteration limits
+ * @returns Promise resolving to the final API response
+ * @throws {Error} If no response is received from the model
+ *
+ * @example
+ * ```typescript
+ * const response = await react(
+ *   request,
+ *   artinetProvider,
+ *   manager.call.bind(manager),
+ *   [],
+ *   { parentTaskId: "task-1", tasks: {}, iterations: 5 }
+ * );
+ * ```
+ */
 export async function react(
   request: API.ConnectRequest,
   provider: APIProvider,
@@ -169,21 +364,22 @@ export async function react(
   history: Callable.Response[] = [],
   options: Callable.Options
 ): Promise<API.ConnectResponse> {
-  let iterations = options?.iterations ?? Callable.DEFAULT_ITERATIONS;
+  let iterations = options.iterations ?? Callable.DEFAULT_ITERATIONS;
 
   let response: API.ConnectResponse | undefined = undefined;
   let results: Callable.Response[] = [];
 
-  for (let i = 0; i < iterations; i++) {
-    const response: API.ConnectResponse = await provider(
+  for (let i = 0; i < iterations && !options.abortSignal?.aborted; i++) {
+    response = await provider(
       update(
         request,
         results,
         i >= iterations - 1 ? [max_iterations_message] : []
-      )
+      ),
+      options.abortSignal
     );
 
-    results = await call({ request: createCall(response), options: options });
+    results = await call({ request: createCall(response), options });
 
     if (results.length === 0) {
       break;
@@ -199,6 +395,23 @@ export async function react(
   return response;
 }
 
+/**
+ * Generates an A2A agent card from the model configuration.
+ *
+ * Creates a card describing the orchestrator as an agent, including
+ * skills derived from all registered tools and agents.
+ *
+ * @param modelId - The model identifier for naming
+ * @param callables - Registered callable services to include as skills
+ * @returns A partial AgentCard with required name and description
+ *
+ * @example
+ * ```typescript
+ * const card = createCard("gpt-4", [tool1, agent1]);
+ * // card.name === "gpt-4-Agent"
+ * // card.skills contains descriptors for tool1 and agent1
+ * ```
+ */
 export function createCard(
   modelId: string,
   callables: (Callable.Agent | Callable.Tool)[]
