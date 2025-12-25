@@ -5,7 +5,7 @@
 import { jest, describe, beforeAll, afterAll, it, expect } from "@jest/globals";
 import { API, Runtime } from "@artinet/types";
 import { createAgent } from "@artinet/sdk";
-import { Client } from "@modelcontextprotocol/sdk/client";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { artinetProvider } from "../src/api/connect.js";
 import { initClient, getToolInfo } from "../src/tool-util.js";
