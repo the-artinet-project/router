@@ -1,36 +1,36 @@
 [![Website](https://img.shields.io/badge/website-artinet.io-black)](https://artinet.io/)
-[![npm version](https://img.shields.io/npm/v/@artinet/router.svg)](https://www.npmjs.com/package/@artinet/orchestrator)
+[![npm version](https://img.shields.io/npm/v/or8.svg)](https://www.npmjs.com/package/@artinet/orchestrator)
 [![npm downloads](https://img.shields.io/npm/dt/@artinet/router.svg)](https://www.npmjs.com/package/@artinet/orchestrator)
 [![Apache License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Known Vulnerabilities](https://snyk.io/test/npm/@artinet/orchestrator/badge.svg)](https://snyk.io/test/npm/@artinet/orchestrator)
-[![GitHub stars](https://img.shields.io/github/stars/the-artinet-project/orchestrator?style=social)](https://github.com/the-artinet-project/orchestrator/stargazers)
+[![Known Vulnerabilities](https://snyk.io/test/npm/@artinet/or8/badge.svg)](https://snyk.io/test/npm/@artinet/orchestrator)
+[![GitHub stars](https://img.shields.io/github/stars/the-artinet-project/or8?style=social)](https://github.com/the-artinet-project/orchestrator/stargazers)
 [![Discord](https://dcbadge.limes.pink/api/server/DaxzSchmmX?style=flat)](https://discord.gg/DaxzSchmmX)
 
-# @artinet/orchestrator
+# or8
 
 Dynamic orchestration for A2A agents and MCP tools.
 
 ## Installation
 
 ```bash
-npm install @artinet/orchestrator @modelcontextprotocol/sdk
+npm install or8 @modelcontextprotocol/sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { create } from "@artinet/orchestrator";
+import { or8 } from "or8";
 
-const model = create({ modelId: "gpt-4" });
+const orchestrator = or8.create({ modelId: "gpt-4" });
 
 // Add MCP tools
-model.add({
+orchestrator.add({
   command: "npx",
   args: ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"],
 });
 
 // Connect and get a response
-const response = await model.connect("List files in /tmp");
+const response = await orchestrator.connect("List files in /tmp");
 console.log(response);
 
 // Clean up
@@ -40,12 +40,12 @@ await model.stop();
 ## Adding Agents
 
 ```typescript
-import { create } from "@artinet/orchestrator";
+import { or8 } from "or8";
 
-const model = create({ modelId: "gpt-4" });
+const orchestrator = or8.create({ modelId: "gpt-4" });
 
-model.add({
-  engine: async function* (context: A2A.Context) {
+orchestrator.add({
+  engine: async function* (context) {
     yield {
       kind: "status-update",
       status: {
@@ -73,17 +73,17 @@ model.add({
   },
 });
 
-const result = await model.connect("Say hello");
+const result = await orchestrator.connect("Say hello");
 ```
 
 ## Events
 
 ```typescript
-model.events.on("update", (data) => {
+orchestrator.events.on("update", (data) => {
   console.log("Update:", data);
 });
 
-model.events.on("error", (error, task) => {
+orchestrator.events.on("error", (error, task) => {
   console.error(`Error in ${task.id}:`, error);
 });
 ```
@@ -91,14 +91,44 @@ model.events.on("error", (error, task) => {
 ## Expose as an A2A Agent
 
 ```typescript
-const agent = model.agent;
+const agent = orchestrator.agent;
 
-await agent.sendMessage({
-  message: {
-    role: "user",
-    parts: [{ kind: "text", text: "Hello" }],
-  },
+await agent.sendMessage("Hello, World!");
+```
+
+## OpenAI Provider
+
+Use OpenAI (or any OpenAI-compatible API) as your LLM backend:
+
+```typescript
+import { or8 } from "or8";
+import { openaiProvider } "or8/openai";
+
+const orchestrator = or8.create({
+  modelId: "gpt-4o",
+  provider: openaiProvider({ apiKey: process.env.OPENAI_API_KEY }),
 });
+
+// Add tools and agents as usual
+orchestrator.add({
+  command: "npx",
+  args: ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"],
+});
+
+const response = await orchestrator.connect("List files in /tmp");
+```
+
+Works with OpenAI-compatible APIs by setting the base URL:
+
+```typescript
+const provider = openaiProvider({
+  apiKey: process.env.API_KEY,
+  baseURL: "https://api.openrouter.ai/v1", // or any compatible endpoint
+});
+```
+
+```bash
+npm install openai
 ```
 
 ## Custom Provider
@@ -106,7 +136,7 @@ await agent.sendMessage({
 Bring your own LLM backend:
 
 ```typescript
-import { create, type APIProvider } from "@artinet/orchestrator";
+import { or8, type APIProvider } from "or8";
 
 const provider: APIProvider = async (request, signal) => {
   const response = await myLLM.chat(request.messages, { signal });
@@ -120,16 +150,8 @@ const provider: APIProvider = async (request, signal) => {
   };
 };
 
-const model = create({ modelId: "my-model", provider });
+const orchestrator = or8.create({ modelId: "my-model", provider });
 ```
-
-## Environment
-
-| Variable              | Description          | Default                                   |
-| --------------------- | -------------------- | ----------------------------------------- |
-| `ARTINET_API_URL`     | API endpoint         | `https://api.stage.artinet.io/v1/connect` |
-| `DEFAULT_CONCURRENCY` | Max concurrent calls | `10`                                      |
-| `DEFAULT_ITERATIONS`  | Max agentic loops    | `10`                                      |
 
 ## License
 

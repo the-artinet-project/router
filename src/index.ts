@@ -33,16 +33,16 @@
  */
 
 /**
- * The Model class exported as `o8` for backward compatibility.
- * Prefer using `create()` factory function for new implementations.
+ * The Model class exported as `or8`.
+ * Prefer using `or8.create()` factory function for new implementations.
  */
-export { Model as o8 } from "./model.js";
+export { Model as or8 } from "./model.js";
 
 /**
  * Factory function for creating new Model instances with type-safe parameters.
  * @see {@link Params} for configuration options
  */
-export { create, type Params } from "./model.js";
+export type { Params } from "./model.js";
 
 /**
  * Type definition for custom API providers.
