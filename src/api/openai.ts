@@ -15,6 +15,7 @@ import { APIProvider } from "../model-util.js";
 import { API } from "@artinet/types";
 import { logger, formatJson } from "@artinet/sdk";
 import { toOpenAIRequest, toArtinetResponse } from "./openai-util.js";
+
 /**
  * Creates an APIProvider that uses OpenAI for completions.
  *
