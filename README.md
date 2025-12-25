@@ -1,27 +1,27 @@
 [![Website](https://img.shields.io/badge/website-artinet.io-black)](https://artinet.io/)
-[![npm version](https://img.shields.io/npm/v/or8.svg)](https://www.npmjs.com/package/@artinet/orchestrator)
+[![npm version](https://img.shields.io/npm/v/o8.svg)](https://www.npmjs.com/package/@artinet/orchestrator)
 [![npm downloads](https://img.shields.io/npm/dt/@artinet/router.svg)](https://www.npmjs.com/package/@artinet/orchestrator)
 [![Apache License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Known Vulnerabilities](https://snyk.io/test/npm/@artinet/or8/badge.svg)](https://snyk.io/test/npm/@artinet/orchestrator)
-[![GitHub stars](https://img.shields.io/github/stars/the-artinet-project/or8?style=social)](https://github.com/the-artinet-project/orchestrator/stargazers)
+[![Known Vulnerabilities](https://snyk.io/test/npm/o8/badge.svg)](https://snyk.io/test/npm/@artinet/orchestrator)
+[![GitHub stars](https://img.shields.io/github/stars/the-artinet-project/o8?style=social)](https://github.com/the-artinet-project/orchestrator/stargazers)
 [![Discord](https://dcbadge.limes.pink/api/server/DaxzSchmmX?style=flat)](https://discord.gg/DaxzSchmmX)
 
-# or8
+# orc8
 
 Dynamic orchestration for A2A agents and MCP tools.
 
 ## Installation
 
 ```bash
-npm install or8 @modelcontextprotocol/sdk
+npm install orc8 @modelcontextprotocol/sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { or8 } from "or8";
+import { orc8 } from "orc8";
 
-const orchestrator = or8.create({ modelId: "gpt-4" });
+const orchestrator = orc8.create({ modelId: "gpt-4" });
 
 // Add MCP tools
 orchestrator.add({
@@ -40,9 +40,9 @@ await model.stop();
 ## Adding Agents
 
 ```typescript
-import { or8 } from "or8";
+import { orc8 } from "orc8";
 
-const orchestrator = or8.create({ modelId: "gpt-4" });
+const orchestrator = orc8.create({ modelId: "gpt-4" });
 
 orchestrator.add({
   engine: async function* (context) {
@@ -101,10 +101,10 @@ await agent.sendMessage("Hello, World!");
 Use OpenAI (or any OpenAI-compatible API) as your LLM backend:
 
 ```typescript
-import { or8 } from "or8";
-import { openaiProvider } "or8/openai";
+import { orc8 } from "orc8";
+import { openaiProvider } "orc8/openai";
 
-const orchestrator = or8.create({
+const orchestrator = orc8.create({
   modelId: "gpt-4o",
   provider: openaiProvider({ apiKey: process.env.OPENAI_API_KEY }),
 });
@@ -136,7 +136,7 @@ npm install openai
 Bring your own LLM backend:
 
 ```typescript
-import { or8, type APIProvider } from "or8";
+import { orc8, type APIProvider } from "orc8";
 
 const provider: APIProvider = async (request, signal) => {
   const response = await myLLM.chat(request.messages, { signal });
@@ -150,7 +150,7 @@ const provider: APIProvider = async (request, signal) => {
   };
 };
 
-const orchestrator = or8.create({ modelId: "my-model", provider });
+const orchestrator = orc8.create({ modelId: "my-model", provider });
 ```
 
 ## License

@@ -33,10 +33,10 @@
  */
 
 /**
- * The Model class exported as `or8`.
- * Prefer using `or8.create()` factory function for new implementations.
+ * The Model class exported as `orc8`.
+ * Prefer using `orc8.create()` factory function for new implementations.
  */
-export { Model as or8 } from "./model.js";
+export { Model as orc8 } from "./model.js";
 
 /**
  * Factory function for creating new Model instances with type-safe parameters.
