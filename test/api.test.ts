@@ -41,7 +41,7 @@ describe.skip("API Tests", () => {
   it("should connect to API", async () => {
     const response = await artinetProvider(defaultRequest);
     expect(response).toBeDefined();
-    expect(response.agentResponse).toBeDefined();
+    expect(response.message?.content).toBeDefined();
   });
 
   it("should send tool info to API", async () => {

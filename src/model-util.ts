@@ -247,11 +247,14 @@ export function request(
  * @returns The extracted text content
  */
 export function response(response: API.ConnectResponse): string {
-  return typeof response.agentResponse === "string"
-    ? response.agentResponse
-    : typeof response.agentResponse.content === "string"
-    ? response.agentResponse.content
-    : response.agentResponse.content.text;
+  const content =
+    typeof response.message.content === "string"
+      ? response.message.content
+      : response.message.content?.text;
+  if (!content) {
+    throw new Error("No content found in response");
+  }
+  return content;
 }
 
 /**
@@ -364,26 +367,25 @@ export async function react(
   history: Callable.Response[] = [],
   options: Callable.Options
 ): Promise<API.ConnectResponse> {
-  let iterations = options.iterations ?? Callable.DEFAULT_ITERATIONS;
+  let iterations: number = options.iterations ?? Callable.DEFAULT_ITERATIONS;
 
   let response: API.ConnectResponse | undefined = undefined;
   let results: Callable.Response[] = [];
 
   for (let i = 0; i < iterations && !options.abortSignal?.aborted; i++) {
-    response = await provider(
-      update(
-        request,
-        results,
-        i >= iterations - 1 ? [max_iterations_message] : []
-      ),
-      options.abortSignal
+    const maxIteration: API.Message[] =
+      i >= iterations - 1 ? [max_iterations_message] : [];
+
+    const updatedRequest: API.ConnectRequest = update(
+      request,
+      results,
+      maxIteration
     );
 
-    results = await call({ request: createCall(response), options });
+    response = await provider(updatedRequest, options.abortSignal);
 
-    if (results.length === 0) {
-      break;
-    }
+    results = await call({ request: createCall(response), options });
+    if (results.length === 0) break;
 
     history = [...history, ...results];
   }
@@ -393,6 +395,29 @@ export async function react(
   }
 
   return response;
+}
+
+function createSkill(value: Callable.Agent | Callable.Tool): A2A.AgentSkill {
+  let name: string = `${value.kind}-${value.uri}`;
+  let description: string = `${value.kind} - ${value.uri}`;
+
+  const info: Runtime.AgentInfo | Runtime.ToolInfo | undefined = value.info;
+  if (info) {
+    if (Runtime.isAgentInfo(info)) {
+      name = info.name;
+      description = info.description;
+    } else {
+      name = info.implementation.name;
+      description = info.instructions ?? `A ${info.implementation.name} tool.`;
+    }
+  }
+
+  return {
+    id: value.uri,
+    name: name,
+    description: description,
+    tags: [value.kind],
+  };
 }
 
 /**
@@ -417,24 +442,8 @@ export function createCard(
   callables: (Callable.Agent | Callable.Tool)[]
 ): Partial<A2A.AgentCard> & { name: string; description: string } {
   return {
-    name: `${modelId}-Agent`,
+    name: `${modelId}-agent`,
     description: `An agent that uses the ${modelId} large language model.`,
-    skills: callables.map((value) => {
-      let name = `${value.kind}-${value.uri}`;
-      let description = `${value.kind} - ${value.uri}`;
-      const info = value.info;
-      if (info) {
-        name = Runtime.isAgentInfo(info) ? info.name : info.implementation.name;
-        description = Runtime.isAgentInfo(info)
-          ? info.description
-          : info.instructions ?? `A ${info.implementation.name} tool.`;
-      }
-      return {
-        id: value.uri,
-        name: name,
-        description: description,
-        tags: [value.kind],
-      };
-    }),
+    skills: callables.map((value) => createSkill(value)),
   };
 }

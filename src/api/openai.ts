@@ -14,7 +14,7 @@ import openai, { ClientOptions, OpenAI } from "openai";
 import { APIProvider } from "../model-util.js";
 import { API } from "@artinet/types";
 import { logger, formatJson } from "@artinet/sdk";
-import { toOpenAIRequest, toArtinetResponse } from "./openai-util.js";
+import { openaiRequest, artinetResponse } from "./openai-util.js";
 
 /**
  * Creates an APIProvider that uses OpenAI for completions.
@@ -45,15 +45,15 @@ export function openaiProvider(client: OpenAI | ClientOptions): APIProvider {
     request: API.ConnectRequest,
     abortSignal?: AbortSignal
   ): Promise<API.ConnectResponse> => {
-    const { params, uriMap } = toOpenAIRequest(request);
-    logger.debug("Creating OpenAI provider:", formatJson(params));
+    const { params, uriMap } = openaiRequest(request);
+    logger.debug("openaiProvider:Request:", formatJson(params));
 
     const completion: openai.ChatCompletion =
       await openaiClient.chat.completions.create(params, {
         signal: abortSignal,
       });
-    logger.debug("OpenAI completion:", formatJson(completion));
+    logger.debug("openaiProvider:Completion:", formatJson(completion));
 
-    return toArtinetResponse(completion, uriMap);
+    return artinetResponse(completion, uriMap);
   };
 }

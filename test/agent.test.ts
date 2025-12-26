@@ -260,6 +260,7 @@ describe("Agent with A2AClient", () => {
   it("should call an A2AClient", async () => {
     const response = await agent.execute({
       request: {
+        id: "test-request-id",
         type: "a2a",
         kind: "agent_request",
         uri: "client-agent-uri",

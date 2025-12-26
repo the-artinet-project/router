@@ -34,7 +34,7 @@ export const MOCK_CONNECT_RESPONSE = (
   options: API.ConnectResponse["options"] = MOCK_RESPONSE_OPTIONS()
 ): API.ConnectResponse => {
   return {
-    agentResponse: response,
+    message: { role: "assistant", content: response },
     timestamp: new Date().toISOString(),
     options: options,
   };

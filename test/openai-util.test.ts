@@ -6,14 +6,14 @@ import { describe, it, expect } from "@jest/globals";
 import { API, Runtime } from "@artinet/types";
 import openai from "openai";
 import {
-  toOpenAIMessages,
-  mcpTools,
-  a2aTools,
-  toOpenAITools,
-  toOpenAIToolMessage,
-  toArtinetToolRequest,
-  toOpenAIRequest,
-  toArtinetResponse,
+  openaiMessages,
+  mcpFunction,
+  a2aFunction,
+  openaiTools,
+  openaiToolMessage,
+  artinetRequest,
+  openaiRequest,
+  artinetResponse,
 } from "../src/api/openai-util.js";
 
 // Helper to safely get function from tool (handles union type)
@@ -31,10 +31,10 @@ const validInputSchema = {
 };
 
 describe("OpenAI Util Tests", () => {
-  describe("toOpenAIMessages", () => {
+  describe("openaiMessages", () => {
     it("should convert user message", () => {
       const messages: API.Message[] = [{ role: "user", content: "Hello" }];
-      const result = toOpenAIMessages(messages);
+      const result = openaiMessages(messages);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({ role: "user", content: "Hello" });
@@ -42,7 +42,7 @@ describe("OpenAI Util Tests", () => {
 
     it("should convert agent role to assistant", () => {
       const messages: API.Message[] = [{ role: "agent", content: "Hi there" }];
-      const result = toOpenAIMessages(messages);
+      const result = openaiMessages(messages);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({ role: "assistant", content: "Hi there" });
@@ -52,7 +52,7 @@ describe("OpenAI Util Tests", () => {
       const messages: API.Message[] = [
         { role: "assistant", content: "Hi there" },
       ];
-      const result = toOpenAIMessages(messages);
+      const result = openaiMessages(messages);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({ role: "assistant", content: "Hi there" });
@@ -62,7 +62,7 @@ describe("OpenAI Util Tests", () => {
       const messages: API.Message[] = [
         { role: "system", content: "You are helpful" },
       ];
-      const result = toOpenAIMessages(messages);
+      const result = openaiMessages(messages);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({ role: "system", content: "You are helpful" });
@@ -74,7 +74,7 @@ describe("OpenAI Util Tests", () => {
         { role: "user", content: "Hello" },
         { role: "agent", content: "Hi!" },
       ];
-      const result = toOpenAIMessages(messages);
+      const result = openaiMessages(messages);
 
       expect(result).toHaveLength(3);
       expect(result[0].role).toBe("system");
@@ -87,7 +87,7 @@ describe("OpenAI Util Tests", () => {
         { role: "user", content: "Hello" },
         { role: "agent", content: "" },
       ];
-      const result = toOpenAIMessages(messages);
+      const result = openaiMessages(messages);
 
       expect(result).toHaveLength(1);
       expect(result[0].content).toBe("Hello");
@@ -97,14 +97,14 @@ describe("OpenAI Util Tests", () => {
       const messages: API.Message[] = [
         { role: "user", content: { text: "Hello from object" } as any },
       ];
-      const result = toOpenAIMessages(messages);
+      const result = openaiMessages(messages);
 
       expect(result).toHaveLength(1);
       expect(result[0].content).toBe("Hello from object");
     });
   });
 
-  describe("mcpTools", () => {
+  describe("mcpFunction", () => {
     it("should convert MCP tool info to OpenAI tools", () => {
       const toolInfo: Runtime.ToolInfo = {
         uri: "test-uri",
@@ -124,7 +124,7 @@ describe("OpenAI Util Tests", () => {
         prompts: [],
       };
 
-      const result = mcpTools("abc123", toolInfo);
+      const result = mcpFunction("abc123", toolInfo);
 
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe("function");
@@ -142,7 +142,7 @@ describe("OpenAI Util Tests", () => {
         prompts: [],
       };
 
-      const result = mcpTools("abc123", toolInfo);
+      const result = mcpFunction("abc123", toolInfo);
       expect(result).toHaveLength(0);
     });
 
@@ -167,7 +167,7 @@ describe("OpenAI Util Tests", () => {
         prompts: [],
       };
 
-      const result = mcpTools("xyz789", toolInfo);
+      const result = mcpFunction("xyz789", toolInfo);
 
       expect(result).toHaveLength(2);
       expect(getFunctionTool(result[0]).name).toBe("mcp_-_xyz789_-_tool1");
@@ -175,7 +175,7 @@ describe("OpenAI Util Tests", () => {
     });
   });
 
-  describe("a2aTools", () => {
+  describe("a2aFunction", () => {
     // Helper for valid agent info
     const baseAgentInfo = {
       uri: "test-uri",
@@ -203,7 +203,7 @@ describe("OpenAI Util Tests", () => {
         ],
       };
 
-      const result = a2aTools("def456", agentInfo);
+      const result = a2aFunction("def456", agentInfo);
 
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe("function");
@@ -221,7 +221,7 @@ describe("OpenAI Util Tests", () => {
         skills: [],
       };
 
-      const result = a2aTools("ghi789", agentInfo);
+      const result = a2aFunction("ghi789", agentInfo);
 
       expect(result).toHaveLength(1);
       expect(getFunctionTool(result[0]).name).toBe(
@@ -238,22 +238,22 @@ describe("OpenAI Util Tests", () => {
         url: "https://noskill.local",
       } as Runtime.AgentInfo;
 
-      const result = a2aTools("jkl012", agentInfo);
+      const result = a2aFunction("jkl012", agentInfo);
 
       expect(result).toHaveLength(1);
       expect(getFunctionTool(result[0]).name).toContain("a2a_-_jkl012");
     });
   });
 
-  describe("toOpenAITools", () => {
+  describe("openaiTools", () => {
     it("should return empty tools and uriMap for empty services", () => {
-      const result = toOpenAITools([]);
+      const result = openaiTools([]);
       expect(result.tools).toHaveLength(0);
       expect(result.uriMap.size).toBe(0);
     });
 
     it("should return empty for undefined services", () => {
-      const result = toOpenAITools(undefined);
+      const result = openaiTools(undefined);
       expect(result.tools).toHaveLength(0);
     });
 
@@ -279,7 +279,7 @@ describe("OpenAI Util Tests", () => {
         },
       ];
 
-      const result = toOpenAITools(services);
+      const result = openaiTools(services);
 
       expect(result.tools).toHaveLength(1);
       expect(result.uriMap.get("eeeeeeeeeeee")).toBe(
@@ -315,7 +315,7 @@ describe("OpenAI Util Tests", () => {
         },
       ];
 
-      const result = toOpenAITools(services);
+      const result = openaiTools(services);
 
       expect(result.tools).toHaveLength(1);
       expect(result.uriMap.get("555555555555")).toBe(
@@ -324,7 +324,7 @@ describe("OpenAI Util Tests", () => {
     });
   });
 
-  describe("toOpenAIToolMessage", () => {
+  describe("openaiToolMessage", () => {
     it("should convert tool response with MCP content", () => {
       const response: Runtime.ToolResponse = {
         kind: "tool_response",
@@ -332,12 +332,13 @@ describe("OpenAI Util Tests", () => {
         callerId: "caller-789",
         uri: "test-uri",
         type: "mcp",
+        call: { name: "echo", arguments: {} },
         result: {
           content: [{ type: "text", text: "Hello from tool" }],
         },
       };
 
-      const result = toOpenAIToolMessage(response);
+      const result = openaiToolMessage(response);
 
       expect(result.role).toBe("tool");
       expect(result.tool_call_id).toBe("call-789");
@@ -354,7 +355,7 @@ describe("OpenAI Util Tests", () => {
         result: "Agent says hello",
       };
 
-      const result = toOpenAIToolMessage(response);
+      const result = openaiToolMessage(response);
 
       expect(result.role).toBe("tool");
       expect(result.tool_call_id).toBe("agent-call-123");
@@ -364,20 +365,22 @@ describe("OpenAI Util Tests", () => {
     it("should use callerId when id is missing", () => {
       const response: Runtime.ToolResponse = {
         kind: "tool_response",
+        id: "caller-only",
         callerId: "caller-only",
         uri: "test-uri",
         type: "mcp",
+        call: { name: "tool", arguments: {} },
         result: {
           content: [{ type: "text", text: "Result" }],
         },
       };
 
-      const result = toOpenAIToolMessage(response);
+      const result = openaiToolMessage(response);
       expect(result.tool_call_id).toBe("caller-only");
     });
   });
 
-  describe("toArtinetToolRequest", () => {
+  describe("artinetRequest", () => {
     it("should convert MCP function tool call", () => {
       const toolCall: openai.ChatCompletionMessageToolCall = {
         id: "call_abc123",
@@ -389,7 +392,7 @@ describe("OpenAI Util Tests", () => {
       };
       const uriMap = new Map([["shortUri", "full-uuid-uri"]]);
 
-      const result = toArtinetToolRequest("test-caller", toolCall, uriMap);
+      const result = artinetRequest("test-caller", toolCall, uriMap);
 
       expect(result.kind).toBe("tool_request");
       expect(result.uri).toBe("full-uuid-uri");
@@ -407,7 +410,7 @@ describe("OpenAI Util Tests", () => {
       };
       const uriMap = new Map([["agentUri", "full-agent-uuid"]]);
 
-      const result = toArtinetToolRequest("test-caller", toolCall, uriMap);
+      const result = artinetRequest("test-caller", toolCall, uriMap);
 
       expect(result.kind).toBe("agent_request");
       expect(result.uri).toBe("full-agent-uuid");
@@ -424,13 +427,13 @@ describe("OpenAI Util Tests", () => {
       };
       const uriMap = new Map<string, string>();
 
-      const result = toArtinetToolRequest("caller", toolCall, uriMap);
+      const result = artinetRequest("caller", toolCall, uriMap);
 
       expect(result.uri).toBe("unmapped");
     });
   });
 
-  describe("toOpenAIRequest", () => {
+  describe("openaiRequest", () => {
     it("should convert basic request", () => {
       const request: API.ConnectRequest = {
         identifier: "gpt-4",
@@ -438,7 +441,7 @@ describe("OpenAI Util Tests", () => {
         preferredEndpoint: "auto",
       };
 
-      const { params, uriMap } = toOpenAIRequest(request);
+      const { params, uriMap } = openaiRequest(request);
 
       expect(params.model).toBe("gpt-4");
       expect(params.messages).toHaveLength(1);
@@ -477,7 +480,7 @@ describe("OpenAI Util Tests", () => {
         },
       };
 
-      const { params, uriMap } = toOpenAIRequest(request);
+      const { params, uriMap } = openaiRequest(request);
 
       expect(params.tools).toBeDefined();
       expect(params.tools?.length).toBe(1);
@@ -505,7 +508,7 @@ describe("OpenAI Util Tests", () => {
         },
       };
 
-      const { params } = toOpenAIRequest(request);
+      const { params } = openaiRequest(request);
 
       // Should have: user message, assistant with tool_calls, tool response
       expect(params.messages.length).toBe(3);
@@ -520,7 +523,7 @@ describe("OpenAI Util Tests", () => {
     });
   });
 
-  describe("toArtinetResponse", () => {
+  describe("artinetResponse", () => {
     it("should convert basic completion", () => {
       const completion: openai.ChatCompletion = {
         id: "chatcmpl-123",
@@ -541,9 +544,9 @@ describe("OpenAI Util Tests", () => {
         ],
       };
 
-      const result = toArtinetResponse(completion, new Map());
+      const result = artinetResponse(completion, new Map());
 
-      expect(result.agentResponse).toBe("Hello!");
+      expect(result.message?.content).toBe("Hello!");
       expect(result.timestamp).toBeDefined();
     });
 
@@ -578,7 +581,7 @@ describe("OpenAI Util Tests", () => {
       };
       const uriMap = new Map([["shortUri", "full-uri"]]);
 
-      const result = toArtinetResponse(completion, uriMap);
+      const result = artinetResponse(completion, uriMap);
 
       expect(result.options?.tools?.requests).toHaveLength(1);
       expect(result.options?.tools?.requests?.[0].uri).toBe("full-uri");
@@ -626,7 +629,7 @@ describe("OpenAI Util Tests", () => {
         ["agentUri", "full-agent-uri"],
       ]);
 
-      const result = toArtinetResponse(completion, uriMap);
+      const result = artinetResponse(completion, uriMap);
 
       expect(result.options?.tools?.requests).toHaveLength(1);
       expect(result.options?.agents?.requests).toHaveLength(1);
@@ -654,9 +657,9 @@ describe("OpenAI Util Tests", () => {
         ],
       };
 
-      const result = toArtinetResponse(completion, new Map());
+      const result = artinetResponse(completion, new Map());
 
-      expect(result.agentResponse).toBe("");
+      expect(result.message?.content).toBeNull();
     });
   });
 });

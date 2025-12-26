@@ -253,7 +253,7 @@ describe("Model Tests", () => {
 
       const agent = model.agent;
       expect(agent).toBeDefined();
-      expect(agent.agentCard.name).toBe("test-model-Agent");
+      expect(agent.agentCard.name).toBe("test-model-agent");
     });
     it("should call the model as an A2A agent", async () => {
       const mockProvider = createMockProvider("Agent response");
