@@ -34,7 +34,7 @@ const response = await orchestrator.connect("List files in /tmp");
 console.log(response);
 
 // Clean up
-await model.stop();
+await orchestrator.stop();
 ```
 
 ## Adding Agents
